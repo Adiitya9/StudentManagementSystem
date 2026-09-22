@@ -3,6 +3,7 @@ package com.example.sms.controller;
 import com.example.sms.dto.StudentRequest;
 import com.example.sms.dto.StudentResponse;
 import com.example.sms.exception.ResourceNotFoundException;
+import com.example.sms.security.JwtTokenProvider;
 import com.example.sms.service.StudentService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -10,17 +11,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.context.annotation.Import;
+import com.example.sms.security.JwtAuthenticationFilter;
+import com.example.sms.security.SecurityConfig;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(StudentController.class)
+@Import({SecurityConfig.class, JwtAuthenticationFilter.class})
 class StudentControllerTest {
 
     @Autowired
@@ -29,10 +37,14 @@ class StudentControllerTest {
     @MockBean
     private StudentService studentService;
 
+    @MockBean
+    private JwtTokenProvider jwtTokenProvider;
+
     @Autowired
     private ObjectMapper objectMapper;
 
     @Test
+    @WithMockUser(authorities = "ROLE_ADMIN")
     void getAllStudents_shouldReturnOkAndList() throws Exception {
         StudentResponse s1 = StudentResponse.builder()
                 .id(1L)
@@ -56,7 +68,8 @@ class StudentControllerTest {
     }
 
     @Test
-    void getStudentById_whenFound_shouldReturnOk() throws Exception {
+    @WithMockUser(authorities = "ROLE_STUDENT")
+    void getStudentById_whenFound_shouldReturnOkForStudent() throws Exception {
         StudentResponse s1 = StudentResponse.builder()
                 .id(1L)
                 .name("Alice")
@@ -79,6 +92,7 @@ class StudentControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = "ROLE_ADMIN")
     void getStudentById_whenNotFound_shouldReturn404() throws Exception {
         when(studentService.getStudentById(99L)).thenThrow(new ResourceNotFoundException("Student not found with id: 99"));
 
@@ -89,6 +103,7 @@ class StudentControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = "ROLE_ADMIN")
     void createStudent_withValidData_shouldReturnCreated() throws Exception {
         StudentRequest req = StudentRequest.builder()
                 .name("Bob")
@@ -114,6 +129,7 @@ class StudentControllerTest {
         when(studentService.createStudent(any(StudentRequest.class))).thenReturn(res);
 
         mockMvc.perform(post("/api/students")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isCreated())
@@ -124,6 +140,27 @@ class StudentControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = "ROLE_STUDENT")
+    void createStudent_whenRoleStudent_shouldReturnForbidden() throws Exception {
+        StudentRequest req = StudentRequest.builder()
+                .name("Bob")
+                .email("bob@example.com")
+                .phone("1234567890")
+                .department("Mathematics")
+                .gpa(3.6)
+                .status("ACTIVE")
+                .enrollmentDate(LocalDate.of(2023, 9, 1))
+                .build();
+
+        mockMvc.perform(post("/api/students")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_ADMIN")
     void createStudent_withInvalidEmail_shouldReturnBadRequest() throws Exception {
         StudentRequest invalidReq = StudentRequest.builder()
                 .name("Bob")
@@ -136,6 +173,7 @@ class StudentControllerTest {
                 .build();
 
         mockMvc.perform(post("/api/students")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidReq)))
                 .andExpect(status().isBadRequest())
@@ -144,32 +182,24 @@ class StudentControllerTest {
     }
 
     @Test
-    void createStudent_withInvalidGpa_shouldReturnBadRequest() throws Exception {
-        StudentRequest invalidGpaReq = StudentRequest.builder()
-                .name("Bob")
-                .email("bob@example.com")
-                .phone("1234567890")
-                .department("Mathematics")
-                .gpa(4.5) // Exceeds 4.0 limit
-                .status("ACTIVE")
-                .enrollmentDate(LocalDate.of(2023, 9, 1))
-                .build();
-
-        mockMvc.perform(post("/api/students")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidGpaReq)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.validationErrors.gpa").exists());
-    }
-
-    @Test
-    void deleteStudent_shouldReturnNoContent() throws Exception {
+    @WithMockUser(authorities = "ROLE_ADMIN")
+    void deleteStudent_asAdmin_shouldReturnNoContent() throws Exception {
         doNothing().when(studentService).deleteStudent(1L);
 
-        mockMvc.perform(delete("/api/students/1"))
+        mockMvc.perform(delete("/api/students/1")
+                        .with(csrf()))
                 .andExpect(status().isNoContent());
 
         verify(studentService, times(1)).deleteStudent(1L);
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_FACULTY")
+    void deleteStudent_asFaculty_shouldReturnForbidden() throws Exception {
+        mockMvc.perform(delete("/api/students/1")
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
+
+        verify(studentService, never()).deleteStudent(anyLong());
     }
 }

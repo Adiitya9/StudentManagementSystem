@@ -1,15 +1,24 @@
 /**
- * Student Management System — Academic Portal Client Application
- * Features: Interactive Charts (Chart.js), Dark Theme, Column Sorting, Pagination, CSV Export & Safe DOM
+ * Studeo — Academic Portal Client Application
+ * Features:
+ * - Enterprise Role-Based Access Control (Admin, Faculty, Student) via JWT
+ * - Real-Time Audit Log & Activity Feed Sidebar
+ * - Interactive Charts (Chart.js) with dynamic theme sync
+ * - Dark / Light Theme Engine with localStorage persistence
+ * - Multi-Column Sorting, Client-Side Pagination, and CSV Export
+ * - Safe, XSS-free DOM construction with zero innerHTML user interpolation
  */
 
 const API_BASE_URL = '/api/students';
+const AUTH_BASE_URL = '/api/auth';
+const AUDIT_BASE_URL = '/api/audit-logs';
 
-// State
+// Application State
 let students = [];
 let filteredStudents = [];
 let editingStudentId = null;
 let pendingDeleteId = null;
+let currentUser = null;
 
 // Sorting & Pagination State
 let sortColumn = 'id';
@@ -21,7 +30,7 @@ const pageSize = 6;
 let deptChartInstance = null;
 let gpaChartInstance = null;
 
-// DOM Elements
+// DOM Elements - Table & Controls
 const studentTableBody = document.getElementById('studentTableBody');
 const emptyState = document.getElementById('emptyState');
 const studentTable = document.getElementById('studentTable');
@@ -32,6 +41,23 @@ const studentForm = document.getElementById('studentForm');
 const modalTitle = document.getElementById('modalTitle');
 const submitBtnText = document.getElementById('submitBtnText');
 const deleteStudentName = document.getElementById('deleteStudentName');
+const readonlyBanner = document.getElementById('readonlyBanner');
+const openAddModalBtn = document.getElementById('openAddModalBtn');
+
+// DOM Elements - Auth & Profile
+const userProfileBtn = document.getElementById('userProfileBtn');
+const userAvatar = document.getElementById('userAvatar');
+const userName = document.getElementById('userName');
+const userRoleBadge = document.getElementById('userRoleBadge');
+const authModal = document.getElementById('authModal');
+const closeAuthModalBtn = document.getElementById('closeAuthModalBtn');
+const loginForm = document.getElementById('loginForm');
+
+// DOM Elements - Activity Feed Drawer
+const openActivityDrawerBtn = document.getElementById('openActivityDrawerBtn');
+const closeActivityDrawerBtn = document.getElementById('closeActivityDrawerBtn');
+const activityDrawerOverlay = document.getElementById('activityDrawerOverlay');
+const timelineContainer = document.getElementById('timelineContainer');
 
 // Metrics Elements
 const metricTotal = document.getElementById('metricTotal');
@@ -51,12 +77,14 @@ const nextPageBtn = document.getElementById('nextPageBtn');
 const toastContainer = document.getElementById('toastContainer');
 
 // --- Initialization ---
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
     bindEvents();
-    loadStudents();
+    await initAuth();
+    await loadStudents();
 });
 
+// --- Event Listeners ---
 function bindEvents() {
     // Theme toggle
     document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
@@ -73,16 +101,34 @@ function bindEvents() {
     // CSV Export
     document.getElementById('exportCsvBtn').addEventListener('click', exportToCsv);
 
-    // Modal triggers
-    document.getElementById('openAddModalBtn').addEventListener('click', () => openStudentModal());
+    // Student Modal triggers
+    openAddModalBtn.addEventListener('click', () => openStudentModal());
     document.getElementById('closeModalBtn').addEventListener('click', closeStudentModal);
     document.getElementById('cancelFormBtn').addEventListener('click', closeStudentModal);
     studentForm.addEventListener('submit', handleFormSubmit);
 
-    // Delete modal triggers
+    // Delete Modal triggers
     document.getElementById('closeDeleteModalBtn').addEventListener('click', closeDeleteModal);
     document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
     document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
+
+    // Auth & Profile Modal triggers
+    userProfileBtn.addEventListener('click', openAuthModal);
+    closeAuthModalBtn.addEventListener('click', closeAuthModal);
+    loginForm.addEventListener('submit', handleLoginFormSubmit);
+
+    // Quick demo role buttons
+    document.querySelectorAll('.demo-role-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const u = btn.dataset.username;
+            const p = btn.dataset.password;
+            executeLogin(u, p);
+        });
+    });
+
+    // Activity Drawer triggers
+    openActivityDrawerBtn.addEventListener('click', openActivityDrawer);
+    closeActivityDrawerBtn.addEventListener('click', closeActivityDrawer);
 
     // Sorting headers
     document.querySelectorAll('th.sortable').forEach(th => {
@@ -115,11 +161,13 @@ function bindEvents() {
         }
     });
 
-    // Keyboard & backdrop close
+    // Keyboard & backdrop closures
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             closeStudentModal();
             closeDeleteModal();
+            closeAuthModal();
+            closeActivityDrawer();
         }
     });
 
@@ -130,6 +178,219 @@ function bindEvents() {
     deleteModal.addEventListener('click', (e) => {
         if (e.target === deleteModal) closeDeleteModal();
     });
+
+    authModal.addEventListener('click', (e) => {
+        if (e.target === authModal) closeAuthModal();
+    });
+
+    activityDrawerOverlay.addEventListener('click', (e) => {
+        if (e.target === activityDrawerOverlay) closeActivityDrawer();
+    });
+}
+
+// --- Authentication & Role Management ---
+async function initAuth() {
+    const cached = localStorage.getItem('studeo_auth');
+    if (cached) {
+        try {
+            currentUser = JSON.parse(cached);
+            updateUserUi();
+            return;
+        } catch (e) {
+            localStorage.removeItem('studeo_auth');
+        }
+    }
+    // Default to admin account on first load for zero-friction demo
+    await executeLogin('admin', 'admin123', false);
+}
+
+async function executeLogin(username, password, showNotification = true) {
+    try {
+        const res = await fetch(`${AUTH_BASE_URL}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+
+        if (!res.ok) {
+            showToast('Invalid username or password.', 'error');
+            return;
+        }
+
+        const data = await res.json();
+        currentUser = data;
+        localStorage.setItem('studeo_auth', JSON.stringify(currentUser));
+        updateUserUi();
+        closeAuthModal();
+
+        if (showNotification) {
+            showToast(`Signed in as ${currentUser.fullName} (${getRoleDisplay(currentUser.role)})`, 'success');
+        }
+
+        await loadStudents();
+        if (activityDrawerOverlay.classList.contains('active')) {
+            loadActivityFeed();
+        }
+    } catch (err) {
+        console.error('Login error:', err);
+        showToast('Authentication service unavailable.', 'error');
+    }
+}
+
+async function handleLoginFormSubmit(e) {
+    e.preventDefault();
+    const u = document.getElementById('loginUsername').value.trim();
+    const p = document.getElementById('loginPassword').value.trim();
+    if (!u || !p) return;
+    await executeLogin(u, p);
+}
+
+function updateUserUi() {
+    if (!currentUser) return;
+
+    userName.textContent = currentUser.fullName || currentUser.username;
+    userAvatar.textContent = getInitials(currentUser.fullName || currentUser.username);
+
+    const roleName = getRoleDisplay(currentUser.role);
+    userRoleBadge.textContent = roleName;
+    userRoleBadge.className = `role-badge-sm role-${roleName}`;
+
+    // Role-based visibility rules
+    const isStudent = currentUser.role === 'ROLE_STUDENT';
+    const isFaculty = currentUser.role === 'ROLE_FACULTY';
+    const isAdmin = currentUser.role === 'ROLE_ADMIN';
+
+    // Show/hide readonly banner
+    readonlyBanner.style.display = isStudent ? 'flex' : 'none';
+
+    // Show/hide Add Student button
+    openAddModalBtn.style.display = isStudent ? 'none' : 'inline-flex';
+
+    // Re-render table with appropriate button privileges
+    renderTable();
+}
+
+function getRoleDisplay(role) {
+    if (!role) return 'USER';
+    return role.replace('ROLE_', '');
+}
+
+function getAuthHeaders() {
+    const headers = { 'Content-Type': 'application/json' };
+    if (currentUser && currentUser.token) {
+        headers['Authorization'] = `Bearer ${currentUser.token}`;
+    }
+    return headers;
+}
+
+function openAuthModal() {
+    loginForm.reset();
+    authModal.classList.add('active');
+}
+
+function closeAuthModal() {
+    authModal.classList.remove('active');
+}
+
+// --- Activity Feed Drawer & Audit Log System ---
+function openActivityDrawer() {
+    activityDrawerOverlay.classList.add('active');
+    loadActivityFeed();
+}
+
+function closeActivityDrawer() {
+    activityDrawerOverlay.classList.remove('active');
+}
+
+async function loadActivityFeed() {
+    try {
+        const response = await fetch(AUDIT_BASE_URL, {
+            headers: getAuthHeaders()
+        });
+
+        if (response.status === 403) {
+            timelineContainer.innerHTML = `
+                <div style="text-align:center; padding: 40px 10px; color: var(--text-muted); font-size: 0.9rem;">
+                    🔒 Activity feed is restricted to Faculty and Administrators.
+                </div>
+            `;
+            return;
+        }
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const logs = await response.json();
+        renderTimeline(logs);
+    } catch (err) {
+        console.error('Audit fetch error:', err);
+        timelineContainer.innerHTML = `
+            <div style="text-align:center; padding: 40px 10px; color: var(--text-muted); font-size: 0.9rem;">
+                Unable to load recent activity feed.
+            </div>
+        `;
+    }
+}
+
+function renderTimeline(logs) {
+    timelineContainer.innerHTML = '';
+
+    if (!logs || logs.length === 0) {
+        timelineContainer.innerHTML = `
+            <div style="text-align:center; padding: 40px 10px; color: var(--text-muted); font-size: 0.9rem;">
+                No recent activity recorded yet.
+            </div>
+        `;
+        return;
+    }
+
+    logs.forEach(log => {
+        const item = document.createElement('div');
+        item.className = 'timeline-item';
+
+        const dot = document.createElement('div');
+        dot.className = `timeline-dot ${log.action}`;
+
+        const card = document.createElement('div');
+        card.className = 'timeline-card';
+
+        const desc = document.createElement('div');
+        desc.className = 'timeline-desc';
+        desc.textContent = log.description;
+
+        const meta = document.createElement('div');
+        meta.className = 'timeline-meta';
+
+        const actor = document.createElement('span');
+        actor.className = 'timeline-actor';
+        actor.textContent = `by ${log.performedBy}`;
+
+        const time = document.createElement('span');
+        time.textContent = formatRelativeTime(log.timestamp);
+
+        meta.appendChild(actor);
+        meta.appendChild(time);
+
+        card.appendChild(desc);
+        card.appendChild(meta);
+
+        item.appendChild(dot);
+        item.appendChild(card);
+
+        timelineContainer.appendChild(item);
+    });
+}
+
+function formatRelativeTime(isoString) {
+    if (!isoString) return 'recently';
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffSec = Math.floor((now - date) / 1000);
+
+    if (diffSec < 60) return 'Just now';
+    if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+    if (diffSec < 604800) return `${Math.floor(diffSec / 86400)}d ago`;
+    return date.toLocaleDateString();
 }
 
 // --- Theme Engine ---
@@ -166,8 +427,17 @@ function applyTheme(theme) {
 // --- Data Fetching ---
 async function loadStudents() {
     try {
-        const response = await fetch(API_BASE_URL);
+        const response = await fetch(API_BASE_URL, {
+            headers: getAuthHeaders()
+        });
+
+        if (response.status === 401) {
+            openAuthModal();
+            return;
+        }
+
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
         students = await response.json();
         filteredStudents = [...students];
         currentPage = 1;
@@ -228,6 +498,21 @@ function sortAndRender() {
     });
 
     renderTable();
+}
+
+// --- GPA Helper ---
+function parseGpa(val) {
+    if (val === null || val === undefined || val === '') return null;
+    const num = Number(val);
+    return isNaN(num) ? null : num;
+}
+
+function getGpaClass(gpa) {
+    const num = parseGpa(gpa);
+    if (num === null) return '';
+    if (num >= 3.5) return 'gpa-high';
+    if (num >= 3.0) return 'gpa-med';
+    return 'gpa-low';
 }
 
 // --- Metrics Calculation ---
@@ -369,7 +654,7 @@ function updateCharts() {
     });
 }
 
-// --- Safe XSS-Free Table & Pagination Rendering ---
+// --- Safe XSS-Free Table & Pagination Rendering with Role Awareness ---
 function renderTable() {
     studentTableBody.innerHTML = '';
 
@@ -398,6 +683,10 @@ function renderTable() {
     pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
     prevPageBtn.disabled = currentPage <= 1;
     nextPageBtn.disabled = currentPage >= totalPages;
+
+    const userRole = currentUser ? currentUser.role : 'ROLE_STUDENT';
+    const canEdit = userRole === 'ROLE_ADMIN' || userRole === 'ROLE_FACULTY';
+    const canDelete = userRole === 'ROLE_ADMIN';
 
     currentSlice.forEach(student => {
         const row = document.createElement('tr');
@@ -474,35 +763,47 @@ function renderTable() {
         contactCell.appendChild(phoneDiv);
         row.appendChild(contactCell);
 
-        // 7. Actions
+        // 7. Actions (Role-Adaptive)
         const actionsCell = document.createElement('td');
         const actionsWrapper = document.createElement('div');
         actionsWrapper.className = 'actions-cell';
 
-        const editBtn = document.createElement('button');
-        editBtn.className = 'btn-icon edit';
-        editBtn.title = 'Edit Student';
-        editBtn.setAttribute('aria-label', `Edit ${student.name}`);
-        editBtn.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-            </svg>
-        `;
-        editBtn.addEventListener('click', () => openStudentModal(student));
+        if (canEdit) {
+            const editBtn = document.createElement('button');
+            editBtn.className = 'btn-icon edit';
+            editBtn.title = 'Edit Student Record';
+            editBtn.setAttribute('aria-label', `Edit ${student.name}`);
+            editBtn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                </svg>
+            `;
+            editBtn.addEventListener('click', () => openStudentModal(student));
+            actionsWrapper.appendChild(editBtn);
+        }
 
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn-icon delete';
-        deleteBtn.title = 'Delete Student';
-        deleteBtn.setAttribute('aria-label', `Delete ${student.name}`);
-        deleteBtn.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-            </svg>
-        `;
-        deleteBtn.addEventListener('click', () => openDeleteModal(student));
+        if (canDelete) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn-icon delete';
+            deleteBtn.title = 'Delete Student Record';
+            deleteBtn.setAttribute('aria-label', `Delete ${student.name}`);
+            deleteBtn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                </svg>
+            `;
+            deleteBtn.addEventListener('click', () => openDeleteModal(student));
+            actionsWrapper.appendChild(deleteBtn);
+        }
 
-        actionsWrapper.appendChild(editBtn);
-        actionsWrapper.appendChild(deleteBtn);
+        if (!canEdit && !canDelete) {
+            const viewPill = document.createElement('span');
+            viewPill.style.fontSize = '0.75rem';
+            viewPill.style.color = 'var(--text-subtle)';
+            viewPill.textContent = 'View-Only';
+            actionsWrapper.appendChild(viewPill);
+        }
+
         actionsCell.appendChild(actionsWrapper);
         row.appendChild(actionsCell);
 
@@ -515,20 +816,6 @@ function getInitials(name) {
     const parts = name.trim().split(/\s+/);
     if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
-function parseGpa(val) {
-    if (val === null || val === undefined || val === '') return null;
-    const num = Number(val);
-    return isNaN(num) ? null : num;
-}
-
-function getGpaClass(gpa) {
-    const num = parseGpa(gpa);
-    if (num === null) return '';
-    if (num >= 3.5) return 'gpa-high';
-    if (num >= 3.0) return 'gpa-med';
-    return 'gpa-low';
 }
 
 // --- CSV Exporter ---
@@ -555,7 +842,7 @@ function exportToCsv() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `students_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `studeo_export_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -640,7 +927,7 @@ async function handleFormSubmit(e) {
     try {
         const response = await fetch(url, {
             method,
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify(payload)
         });
 
@@ -648,6 +935,11 @@ async function handleFormSubmit(e) {
             closeStudentModal();
             showToast(isEdit ? 'Student record updated!' : 'Student enrolled successfully!', 'success');
             await loadStudents();
+            if (activityDrawerOverlay.classList.contains('active')) {
+                loadActivityFeed();
+            }
+        } else if (response.status === 403) {
+            showToast('Permission denied: You lack privileges to modify records.', 'error');
         } else if (response.status === 400) {
             const errData = await response.json();
             if (errData.validationErrors) {
@@ -684,15 +976,21 @@ async function confirmDelete() {
 
     try {
         const response = await fetch(`${API_BASE_URL}/${pendingDeleteId}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
             closeDeleteModal();
             showToast('Student record deleted.', 'info');
             await loadStudents();
+            if (activityDrawerOverlay.classList.contains('active')) {
+                loadActivityFeed();
+            }
+        } else if (response.status === 403) {
+            showToast('Permission denied: Only administrators can delete records.', 'error');
         } else {
-            showToast('Failed to delete student.', 'error');
+            showToast('Failed to delete student record.', 'error');
         }
     } catch (err) {
         console.error('Delete error:', err);

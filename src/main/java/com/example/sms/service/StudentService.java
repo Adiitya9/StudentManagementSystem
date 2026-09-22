@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 public class StudentService {
 
     private final StudentRepository studentRepository;
+    private final AuditLogService auditLogService;
 
     @Transactional(readOnly = true)
     public List<StudentResponse> getAllStudents() {
@@ -48,6 +49,10 @@ public class StudentService {
                 .enrollmentDate(request.getEnrollmentDate())
                 .build();
         Student saved = studentRepository.save(student);
+
+        auditLogService.log("STUDENT_ENROLLED",
+                saved.getName() + " enrolled in " + saved.getDepartment() + " (GPA: " + String.format("%.2f", saved.getGpa()) + ")");
+
         return StudentResponse.fromEntity(saved);
     }
 
@@ -59,6 +64,9 @@ public class StudentService {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id));
 
+        Double oldGpa = student.getGpa();
+        String oldStatus = student.getStatus();
+
         student.setName(request.getName().trim());
         student.setEmail(request.getEmail().trim());
         student.setPhone(request.getPhone().trim());
@@ -68,15 +76,28 @@ public class StudentService {
         student.setEnrollmentDate(request.getEnrollmentDate());
 
         Student updated = studentRepository.save(student);
+
+        String updateDetail = updated.getName() + " profile updated";
+        if (!Objects.equals(oldGpa, updated.getGpa())) {
+            updateDetail += " — GPA updated to " + String.format("%.2f", updated.getGpa());
+        } else if (!Objects.equals(oldStatus, updated.getStatus())) {
+            updateDetail += " — Status changed to " + updated.getStatus();
+        }
+
+        auditLogService.log("STUDENT_UPDATED", updateDetail);
+
         return StudentResponse.fromEntity(updated);
     }
 
     @Transactional
     public void deleteStudent(Long id) {
         Objects.requireNonNull(id, "id must not be null");
-        if (!studentRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Student not found with id: " + id);
-        }
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id));
+
         studentRepository.deleteById(id);
+
+        auditLogService.log("STUDENT_DELETED",
+                "Student record #" + id + " (" + student.getName() + ", " + student.getDepartment() + ") was deleted");
     }
 }
