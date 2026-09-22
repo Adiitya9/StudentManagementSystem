@@ -42,6 +42,10 @@ public class StudentService {
                 .name(request.getName().trim())
                 .email(request.getEmail().trim())
                 .phone(request.getPhone().trim())
+                .department(request.getDepartment().trim())
+                .gpa(request.getGpa())
+                .status(request.getStatus().trim().toUpperCase())
+                .enrollmentDate(request.getEnrollmentDate())
                 .build();
         Student saved = studentRepository.save(student);
         return StudentResponse.fromEntity(saved);
@@ -58,6 +62,10 @@ public class StudentService {
         student.setName(request.getName().trim());
         student.setEmail(request.getEmail().trim());
         student.setPhone(request.getPhone().trim());
+        student.setDepartment(request.getDepartment().trim());
+        student.setGpa(request.getGpa());
+        student.setStatus(request.getStatus().trim().toUpperCase());
+        student.setEnrollmentDate(request.getEnrollmentDate());
 
         Student updated = studentRepository.save(student);
         return StudentResponse.fromEntity(updated);

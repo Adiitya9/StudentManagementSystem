@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,6 +18,10 @@ public class StudentResponse {
     private String name;
     private String email;
     private String phone;
+    private String department;
+    private Double gpa;
+    private String status;
+    private LocalDate enrollmentDate;
 
     public static StudentResponse fromEntity(Student student) {
         if (student == null) {
@@ -26,6 +32,10 @@ public class StudentResponse {
                 .name(student.getName())
                 .email(student.getEmail())
                 .phone(student.getPhone())
+                .department(student.getDepartment())
+                .gpa(student.getGpa())
+                .status(student.getStatus())
+                .enrollmentDate(student.getEnrollmentDate())
                 .build();
     }
 }

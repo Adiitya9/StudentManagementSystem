@@ -12,10 +12,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -34,24 +34,48 @@ class StudentControllerTest {
 
     @Test
     void getAllStudents_shouldReturnOkAndList() throws Exception {
-        StudentResponse s1 = StudentResponse.builder().id(1L).name("Alice").email("alice@example.com").phone("1234567890").build();
+        StudentResponse s1 = StudentResponse.builder()
+                .id(1L)
+                .name("Alice")
+                .email("alice@example.com")
+                .phone("1234567890")
+                .department("Computer Science")
+                .gpa(3.8)
+                .status("ACTIVE")
+                .enrollmentDate(LocalDate.of(2023, 9, 1))
+                .build();
+
         when(studentService.getAllStudents()).thenReturn(List.of(s1));
 
         mockMvc.perform(get("/api/students"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].name").value("Alice"));
+                .andExpect(jsonPath("$[0].name").value("Alice"))
+                .andExpect(jsonPath("$[0].department").value("Computer Science"))
+                .andExpect(jsonPath("$[0].gpa").value(3.8));
     }
 
     @Test
     void getStudentById_whenFound_shouldReturnOk() throws Exception {
-        StudentResponse s1 = StudentResponse.builder().id(1L).name("Alice").email("alice@example.com").phone("1234567890").build();
+        StudentResponse s1 = StudentResponse.builder()
+                .id(1L)
+                .name("Alice")
+                .email("alice@example.com")
+                .phone("1234567890")
+                .department("Computer Science")
+                .gpa(3.8)
+                .status("ACTIVE")
+                .enrollmentDate(LocalDate.of(2023, 9, 1))
+                .build();
+
         when(studentService.getStudentById(1L)).thenReturn(s1);
 
         mockMvc.perform(get("/api/students/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("Alice"));
+                .andExpect(jsonPath("$.name").value("Alice"))
+                .andExpect(jsonPath("$.department").value("Computer Science"))
+                .andExpect(jsonPath("$.status").value("ACTIVE"));
     }
 
     @Test
@@ -70,6 +94,10 @@ class StudentControllerTest {
                 .name("Bob")
                 .email("bob@example.com")
                 .phone("1234567890")
+                .department("Mathematics")
+                .gpa(3.6)
+                .status("ACTIVE")
+                .enrollmentDate(LocalDate.of(2023, 9, 1))
                 .build();
 
         StudentResponse res = StudentResponse.builder()
@@ -77,6 +105,10 @@ class StudentControllerTest {
                 .name("Bob")
                 .email("bob@example.com")
                 .phone("1234567890")
+                .department("Mathematics")
+                .gpa(3.6)
+                .status("ACTIVE")
+                .enrollmentDate(LocalDate.of(2023, 9, 1))
                 .build();
 
         when(studentService.createStudent(any(StudentRequest.class))).thenReturn(res);
@@ -86,7 +118,9 @@ class StudentControllerTest {
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(2))
-                .andExpect(jsonPath("$.name").value("Bob"));
+                .andExpect(jsonPath("$.name").value("Bob"))
+                .andExpect(jsonPath("$.department").value("Mathematics"))
+                .andExpect(jsonPath("$.gpa").value(3.6));
     }
 
     @Test
@@ -95,6 +129,10 @@ class StudentControllerTest {
                 .name("Bob")
                 .email("not-an-email")
                 .phone("1234567890")
+                .department("Mathematics")
+                .gpa(3.6)
+                .status("ACTIVE")
+                .enrollmentDate(LocalDate.of(2023, 9, 1))
                 .build();
 
         mockMvc.perform(post("/api/students")
@@ -103,6 +141,26 @@ class StudentControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.validationErrors.email").exists());
+    }
+
+    @Test
+    void createStudent_withInvalidGpa_shouldReturnBadRequest() throws Exception {
+        StudentRequest invalidGpaReq = StudentRequest.builder()
+                .name("Bob")
+                .email("bob@example.com")
+                .phone("1234567890")
+                .department("Mathematics")
+                .gpa(4.5) // Exceeds 4.0 limit
+                .status("ACTIVE")
+                .enrollmentDate(LocalDate.of(2023, 9, 1))
+                .build();
+
+        mockMvc.perform(post("/api/students")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidGpaReq)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.validationErrors.gpa").exists());
     }
 
     @Test

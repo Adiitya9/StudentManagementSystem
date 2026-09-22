@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "students")
 @Data
@@ -26,4 +28,16 @@ public class Student {
 
     @Column(nullable = false)
     private String phone;
+
+    @Column(nullable = false)
+    private String department;
+
+    @Column(nullable = false)
+    private Double gpa;
+
+    @Column(nullable = false)
+    private String status;
+
+    @Column(nullable = false)
+    private LocalDate enrollmentDate;
 }
