@@ -1,12 +1,16 @@
 /**
- * Studeo — Academic Portal Client Application
+ * Studeo — Academic Portal & Registrar Client Application
  * Features:
- * - Enterprise Role-Based Access Control (Admin, Faculty, Student) via JWT
+ * - Enterprise RBAC (Admin, Faculty, Student) via JWT
  * - Real-Time Audit Log & Activity Feed Sidebar
- * - Interactive Charts (Chart.js) with dynamic theme sync
- * - Dark / Light Theme Engine with localStorage persistence
- * - Multi-Column Sorting, Client-Side Pagination, and CSV Export
- * - Safe, XSS-free DOM construction with zero innerHTML user interpolation
+ * - Multi-Entity Academic Architecture:
+ *     1. Student Register Ledger (with 10-per-page pagination, debounced search, CSV export)
+ *     2. Gradebook & Attendance Matrix by Course Section
+ *     3. Curriculum & Course Bulletin Catalog
+ *     4. Official Academic Transcript & Institutional Student ID Card
+ * - Interactive Chart.js analytics with theme synchronization
+ * - Dark / Light Archival Paper Theme Engine with localStorage persistence
+ * - Safe XSS-free DOM construction using textContent
  */
 
 const API_BASE_URL = '/api/students';
@@ -19,16 +23,30 @@ let filteredStudents = [];
 let editingStudentId = null;
 let pendingDeleteId = null;
 let currentUser = null;
+let selectedTranscriptStudentId = null;
+let currentTab = 'viewRegister';
 
 // Sorting & Pagination State
 let sortColumn = 'id';
 let sortDirection = 'asc';
 let currentPage = 1;
-const pageSize = 6;
+const pageSize = 10; // 10 per page for academic density
 
 // Chart Instances
 let deptChartInstance = null;
 let gpaChartInstance = null;
+
+// Static Academic Course Catalog
+const COURSE_CATALOG = [
+    { code: 'CS-101', title: 'Introduction to Computer Systems & Algorithms', department: 'Computer Science', credits: '4.0', instructor: 'Dr. Eleanor Vance', schedule: 'MWF 09:00 - 10:30', room: 'Hall A-102', enrolled: 38, capacity: 40, status: 'OPEN' },
+    { code: 'CS-301', title: 'Distributed Systems & Cloud Architectures', department: 'Computer Science', credits: '4.0', instructor: 'Dr. Eleanor Vance', schedule: 'TTh 11:00 - 12:30', room: 'Turing Lab 3', enrolled: 28, capacity: 30, status: 'OPEN' },
+    { code: 'DS-201', title: 'Applied Machine Learning & Neural Networks', department: 'Data Science', credits: '4.0', instructor: 'Prof. Rajesh Nair', schedule: 'MWF 13:00 - 14:30', room: 'Science C-201', enrolled: 35, capacity: 35, status: 'FULL' },
+    { code: 'BA-105', title: 'Corporate Financial Strategy & Governance', department: 'Business Administration', credits: '3.0', instructor: 'Prof. Arthur Miller', schedule: 'TTh 14:00 - 15:30', room: 'Executive Aud 1', enrolled: 42, capacity: 45, status: 'OPEN' },
+    { code: 'ME-204', title: 'Thermodynamics & Fluid Dynamics Engineering', department: 'Mechanical Engineering', credits: '4.0', instructor: 'Prof. Subhash Roy', schedule: 'MWF 10:00 - 11:30', room: 'Engineering B-10', enrolled: 29, capacity: 30, status: 'OPEN' },
+    { code: 'EE-302', title: 'Linear Control Systems & Signal Processing', department: 'Electrical Engineering', credits: '3.5', instructor: 'Prof. Ananya Sen', schedule: 'TTh 09:30 - 11:00', room: 'Maxwell Hall 4', enrolled: 30, capacity: 30, status: 'FULL' },
+    { code: 'IT-401', title: 'Enterprise Cybersecurity & Cryptographic Protocol', department: 'Information Technology', credits: '4.0', instructor: 'Prof. Vikram Sharma', schedule: 'MWF 15:00 - 16:30', room: 'Cyber Lab 2', enrolled: 22, capacity: 25, status: 'OPEN' },
+    { code: 'MATH-210', title: 'Discrete Structures & Linear Vector Spaces', department: 'Mathematics', credits: '4.0', instructor: 'Prof. S. Raman', schedule: 'TTh 13:00 - 14:30', room: 'Euler Hall 101', enrolled: 40, capacity: 40, status: 'FULL' }
+];
 
 // DOM Elements - Table & Controls
 const studentTableBody = document.getElementById('studentTableBody');
@@ -73,6 +91,24 @@ const pageIndicator = document.getElementById('pageIndicator');
 const prevPageBtn = document.getElementById('prevPageBtn');
 const nextPageBtn = document.getElementById('nextPageBtn');
 
+// Tab Navigation Elements
+const tabRegisterBtn = document.getElementById('tabRegisterBtn');
+const tabGradebookBtn = document.getElementById('tabGradebookBtn');
+const tabCoursesBtn = document.getElementById('tabCoursesBtn');
+const tabTranscriptBtn = document.getElementById('tabTranscriptBtn');
+const viewRegister = document.getElementById('viewRegister');
+const viewGradebook = document.getElementById('viewGradebook');
+const viewCourses = document.getElementById('viewCourses');
+const viewTranscript = document.getElementById('viewTranscript');
+const tabCountStudents = document.getElementById('tabCountStudents');
+
+// Gradebook & Transcript Elements
+const gradebookCourseSelect = document.getElementById('gradebookCourseSelect');
+const gradebookTableBody = document.getElementById('gradebookTableBody');
+const courseTableBody = document.getElementById('courseTableBody');
+const transcriptStudentSelect = document.getElementById('transcriptStudentSelect');
+const transcriptSelectorBar = document.getElementById('transcriptSelectorBar');
+
 // Toast Container
 const toastContainer = document.getElementById('toastContainer');
 
@@ -80,6 +116,7 @@ const toastContainer = document.getElementById('toastContainer');
 document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
     bindEvents();
+    renderCourses();
     await initAuth();
     await loadStudents();
 });
@@ -89,13 +126,35 @@ function bindEvents() {
     // Theme toggle
     document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
 
-    // Search input with debounce
+    // Tab Navigation
+    tabRegisterBtn.addEventListener('click', () => switchTab('viewRegister'));
+    tabGradebookBtn.addEventListener('click', () => switchTab('viewGradebook'));
+    tabCoursesBtn.addEventListener('click', () => switchTab('viewCourses'));
+    tabTranscriptBtn.addEventListener('click', () => switchTab('viewTranscript'));
+
+    // Gradebook Course selector
+    if (gradebookCourseSelect) {
+        gradebookCourseSelect.addEventListener('change', () => renderGradebook());
+    }
+
+    // Transcript Student selector (Faculty/Admin)
+    if (transcriptStudentSelect) {
+        transcriptStudentSelect.addEventListener('change', (e) => {
+            const sid = parseInt(e.target.value, 10);
+            if (!isNaN(sid)) {
+                selectedTranscriptStudentId = sid;
+                renderTranscript(sid);
+            }
+        });
+    }
+
+    // Search input with 200ms debounce
     let debounceTimer;
     searchInput.addEventListener('input', (e) => {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
             filterStudents(e.target.value);
-        }, 150);
+        }, 200);
     });
 
     // CSV Export
@@ -171,57 +230,92 @@ function bindEvents() {
         }
     });
 
-    studentModal.addEventListener('click', (e) => {
-        if (e.target === studentModal) closeStudentModal();
-    });
-
-    deleteModal.addEventListener('click', (e) => {
-        if (e.target === deleteModal) closeDeleteModal();
-    });
-
-    authModal.addEventListener('click', (e) => {
-        if (e.target === authModal) closeAuthModal();
-    });
-
-    activityDrawerOverlay.addEventListener('click', (e) => {
-        if (e.target === activityDrawerOverlay) closeActivityDrawer();
+    [studentModal, deleteModal, authModal, activityDrawerOverlay].forEach(overlay => {
+        if (overlay) {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    closeStudentModal();
+                    closeDeleteModal();
+                    closeAuthModal();
+                    closeActivityDrawer();
+                }
+            });
+        }
     });
 }
 
-// --- Authentication & Role Management ---
+// --- Tab Navigation Engine ---
+function switchTab(targetTabId) {
+    currentTab = targetTabId;
+
+    const tabs = [
+        { id: 'viewRegister', btn: tabRegisterBtn, panel: viewRegister },
+        { id: 'viewGradebook', btn: tabGradebookBtn, panel: viewGradebook },
+        { id: 'viewCourses', btn: tabCoursesBtn, panel: viewCourses },
+        { id: 'viewTranscript', btn: tabTranscriptBtn, panel: viewTranscript }
+    ];
+
+    tabs.forEach(t => {
+        if (t.id === targetTabId) {
+            t.btn.classList.add('active');
+            t.panel.classList.remove('hidden');
+        } else {
+            t.btn.classList.remove('active');
+            t.panel.classList.add('hidden');
+        }
+    });
+
+    if (targetTabId === 'viewGradebook') {
+        renderGradebook();
+    } else if (targetTabId === 'viewCourses') {
+        renderCourses();
+    } else if (targetTabId === 'viewTranscript') {
+        renderTranscript(selectedTranscriptStudentId);
+    }
+}
+
+// --- Auth & RBAC Subsystem ---
 async function initAuth() {
-    const cached = localStorage.getItem('studeo_auth');
-    if (cached) {
+    const saved = localStorage.getItem('studeo_auth');
+    if (saved) {
         try {
-            currentUser = JSON.parse(cached);
+            currentUser = JSON.parse(saved);
             updateUserUi();
             return;
         } catch (e) {
+            console.warn('Invalid auth in localStorage:', e);
             localStorage.removeItem('studeo_auth');
         }
     }
-    // Default to admin account on first load for zero-friction demo
+    // Default seamless login as Admin (Dr. Eleanor Vance)
     await executeLogin('admin', 'admin123', false);
 }
 
 async function executeLogin(username, password, showNotification = true) {
     try {
-        const res = await fetch(`${AUTH_BASE_URL}/login`, {
+        const response = await fetch(`${AUTH_BASE_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
 
-        if (!res.ok) {
-            showToast('Invalid username or password.', 'error');
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            showToast(err.message || 'Invalid credentials.', 'error');
             return;
         }
 
-        const data = await res.json();
-        currentUser = data;
+        const data = await response.json();
+        currentUser = {
+            username: data.username,
+            fullName: data.fullName,
+            role: data.role,
+            token: data.token
+        };
         localStorage.setItem('studeo_auth', JSON.stringify(currentUser));
-        updateUserUi();
+
         closeAuthModal();
+        updateUserUi();
 
         if (showNotification) {
             showToast(`Signed in as ${currentUser.fullName} (${getRoleDisplay(currentUser.role)})`, 'success');
@@ -266,7 +360,22 @@ function updateUserUi() {
     // Show/hide Add Student button
     openAddModalBtn.style.display = isStudent ? 'none' : 'inline-flex';
 
-    // Re-render table with appropriate button privileges
+    // Auto-adjust Student Portal
+    if (isStudent) {
+        // Find Priya Patel or student record
+        const matchingStudent = students.find(s => s.name.toLowerCase().includes('priya') || s.email.includes('student') || s.email.includes('priya'));
+        if (matchingStudent) {
+            selectedTranscriptStudentId = matchingStudent.id;
+        }
+        transcriptSelectorBar.style.display = 'none'; // Lock selector for student
+        // If not already in transcript, auto-switch to transcript
+        if (currentTab === 'viewRegister') {
+            switchTab('viewTranscript');
+        }
+    } else {
+        transcriptSelectorBar.style.display = 'flex'; // Visible for faculty/admin
+    }
+
     renderTable();
 }
 
@@ -303,6 +412,8 @@ function closeActivityDrawer() {
 }
 
 async function loadActivityFeed() {
+    timelineContainer.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;padding:12px;">Loading activity history...</div>';
+
     try {
         const response = await fetch(AUDIT_BASE_URL, {
             headers: getAuthHeaders()
@@ -310,11 +421,12 @@ async function loadActivityFeed() {
 
         if (response.status === 403) {
             timelineContainer.innerHTML = `
-                <div style="text-align:center; padding: 48px 16px; color: var(--text-muted); font-size: 0.88rem; display: flex; flex-direction: column; align-items: center; gap: 10px;">
-                    <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--text-subtle);">
+                <div style="padding:24px 16px;text-align:center;color:var(--text-muted);">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:40px;height:40px;margin-bottom:8px;color:var(--red-mark);">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                     </svg>
-                    <span>Activity feed is restricted to Faculty and Administrators.</span>
+                    <div style="font-weight:600;color:var(--text-main);margin-bottom:4px;">Restricted Access</div>
+                    <div style="font-size:0.8rem;">Audit activity log is confidential to Faculty and Administrators.</div>
                 </div>
             `;
             return;
@@ -325,12 +437,8 @@ async function loadActivityFeed() {
         const logs = await response.json();
         renderTimeline(logs);
     } catch (err) {
-        console.error('Audit fetch error:', err);
-        timelineContainer.innerHTML = `
-            <div style="text-align:center; padding: 40px 10px; color: var(--text-muted); font-size: 0.9rem;">
-                Unable to load recent activity feed.
-            </div>
-        `;
+        console.error('Audit log fetch error:', err);
+        timelineContainer.innerHTML = '<div style="color:var(--red-mark);font-size:0.85rem;padding:12px;">Unable to load activity history.</div>';
     }
 }
 
@@ -338,11 +446,7 @@ function renderTimeline(logs) {
     timelineContainer.innerHTML = '';
 
     if (!logs || logs.length === 0) {
-        timelineContainer.innerHTML = `
-            <div style="text-align:center; padding: 40px 10px; color: var(--text-muted); font-size: 0.9rem;">
-                No recent activity recorded yet.
-            </div>
-        `;
+        timelineContainer.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;padding:12px;">No activity logged yet.</div>';
         return;
     }
 
@@ -365,26 +469,24 @@ function renderTimeline(logs) {
 
         const actor = document.createElement('span');
         actor.className = 'timeline-actor';
-        actor.textContent = `by ${log.performedBy}`;
+        actor.textContent = `${log.performedBy || 'System'} (${getRoleDisplay(log.userRole)})`;
 
         const time = document.createElement('span');
         time.textContent = formatRelativeTime(log.timestamp);
 
         meta.appendChild(actor);
         meta.appendChild(time);
-
         card.appendChild(desc);
         card.appendChild(meta);
 
         item.appendChild(dot);
         item.appendChild(card);
-
         timelineContainer.appendChild(item);
     });
 }
 
 function formatRelativeTime(isoString) {
-    if (!isoString) return 'recently';
+    if (!isoString) return '';
     const date = new Date(isoString);
     const now = new Date();
     const diffSec = Math.floor((now - date) / 1000);
@@ -396,7 +498,7 @@ function formatRelativeTime(isoString) {
     return date.toLocaleDateString();
 }
 
-// --- Theme Engine ---
+// --- Theme Management ---
 function initTheme() {
     const savedTheme = localStorage.getItem('sms_theme') || 'light';
     applyTheme(savedTheme);
@@ -444,12 +546,26 @@ async function loadStudents() {
         students = await response.json();
         filteredStudents = [...students];
         currentPage = 1;
+
+        if (tabCountStudents) {
+            tabCountStudents.textContent = students.length;
+        }
+
+        // Default transcript student selection
+        if (!selectedTranscriptStudentId && students.length > 0) {
+            selectedTranscriptStudentId = students[0].id;
+        }
+
+        populateTranscriptSelector();
         sortAndRender();
         updateMetrics();
         updateCharts();
+
+        if (currentTab === 'viewGradebook') renderGradebook();
+        if (currentTab === 'viewTranscript') renderTranscript(selectedTranscriptStudentId);
     } catch (err) {
         console.error('Fetch error:', err);
-        showToast('Failed to load student records.', 'error');
+        showToast('Failed to load student records from registrar database.', 'error');
     }
 }
 
@@ -464,7 +580,8 @@ function filterStudents(query) {
             (s.email && s.email.toLowerCase().includes(q)) ||
             (s.department && s.department.toLowerCase().includes(q)) ||
             (s.phone && s.phone.includes(q)) ||
-            (s.status && s.status.toLowerCase().includes(q))
+            (s.status && s.status.toLowerCase().includes(q)) ||
+            (s.id && String(s.id).includes(q))
         );
     }
     currentPage = 1;
@@ -525,7 +642,6 @@ function updateMetrics() {
     tableCountBadge.textContent = `${filteredStudents.length} of ${students.length} students`;
 
     if (students.length > 0) {
-        // Average GPA
         const validGpas = students
             .map(s => parseGpa(s.gpa))
             .filter(g => g !== null);
@@ -536,7 +652,6 @@ function updateMetrics() {
             metricAvgGpa.textContent = '0.00';
         }
 
-        // Top Department
         const deptCounts = {};
         students.forEach(s => {
             const dept = s.department || 'General';
@@ -557,13 +672,13 @@ function updateMetrics() {
     }
 }
 
-// --- Interactive Charts (Chart.js) ---
+// --- Interactive Charts (Chart.js) with Institutional Colors ---
 function updateCharts() {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const textColor = isDark ? '#94a3b8' : '#64748b';
-    const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)';
+    const textColor = isDark ? '#94a3b8' : '#6b7280';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.05)';
 
-    // 1. Department Breakdown
+    // 1. Department Breakdown (Muted Registrar Palette)
     const deptCounts = {};
     students.forEach(s => {
         const d = s.department || 'Other';
@@ -573,14 +688,15 @@ function updateCharts() {
     const deptLabels = Object.keys(deptCounts);
     const deptData = Object.values(deptCounts);
     const deptColors = [
-        '#4f46e5', '#06b6d4', '#10b981', '#f59e0b',
-        '#8b5cf6', '#ec4899', '#f97316', '#14b8a6'
+        '#0d7377', '#1e293b', '#d97706', '#0284c7',
+        '#7e22ce', '#4d7c0f', '#c2410c', '#64748b'
     ];
 
-    const ctxDept = document.getElementById('deptChart').getContext('2d');
+    const ctxDept = document.getElementById('deptChart');
+    if (!ctxDept) return;
     if (deptChartInstance) deptChartInstance.destroy();
 
-    deptChartInstance = new Chart(ctxDept, {
+    deptChartInstance = new Chart(ctxDept.getContext('2d'), {
         type: 'doughnut',
         data: {
             labels: deptLabels.length ? deptLabels : ['None'],
@@ -588,7 +704,7 @@ function updateCharts() {
                 data: deptData.length ? deptData : [1],
                 backgroundColor: deptColors.slice(0, deptLabels.length || 1),
                 borderWidth: 2,
-                borderColor: isDark ? '#131b2e' : '#ffffff'
+                borderColor: isDark ? '#1a2332' : '#ffffff'
             }]
         },
         options: {
@@ -622,18 +738,19 @@ function updateCharts() {
         else gpaBrackets['< 2.50']++;
     });
 
-    const ctxGpa = document.getElementById('gpaChart').getContext('2d');
+    const ctxGpa = document.getElementById('gpaChart');
+    if (!ctxGpa) return;
     if (gpaChartInstance) gpaChartInstance.destroy();
 
-    gpaChartInstance = new Chart(ctxGpa, {
+    gpaChartInstance = new Chart(ctxGpa.getContext('2d'), {
         type: 'bar',
         data: {
             labels: Object.keys(gpaBrackets),
             datasets: [{
-                label: 'Students',
+                label: 'Enrolled Records',
                 data: Object.values(gpaBrackets),
-                backgroundColor: ['#10b981', '#4f46e5', '#06b6d4', '#f59e0b', '#ef4444'],
-                borderRadius: 6
+                backgroundColor: ['#15803d', '#0d7377', '#0284c7', '#d97706', '#b91c1c'],
+                borderRadius: 4
             }]
         },
         options: {
@@ -646,7 +763,7 @@ function updateCharts() {
                 },
                 y: {
                     beginAtZero: true,
-                    ticks: { color: textColor, stepSize: 1, font: { family: 'Inter', size: 10 } },
+                    ticks: { color: textColor, stepSize: 2, font: { family: 'Inter', size: 10 } },
                     grid: { color: gridColor }
                 }
             },
@@ -657,7 +774,7 @@ function updateCharts() {
     });
 }
 
-// --- Safe XSS-Free Table & Pagination Rendering with Role Awareness ---
+// --- Safe XSS-Free Table Rendering ---
 function renderTable() {
     studentTableBody.innerHTML = '';
 
@@ -681,7 +798,6 @@ function renderTable() {
     const endIndex = Math.min(startIndex + pageSize, totalStudents);
     const currentSlice = filteredStudents.slice(startIndex, endIndex);
 
-    // Update Pagination bar info
     paginationInfo.textContent = `Showing ${startIndex + 1} to ${endIndex} of ${totalStudents} students`;
     pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
     prevPageBtn.disabled = currentPage <= 1;
@@ -694,7 +810,7 @@ function renderTable() {
     currentSlice.forEach(student => {
         const row = document.createElement('tr');
 
-        // 1. ID
+        // 1. ID Badge
         const idCell = document.createElement('td');
         const idBadge = document.createElement('span');
         idBadge.className = 'student-id-badge';
@@ -702,14 +818,10 @@ function renderTable() {
         idCell.appendChild(idBadge);
         row.appendChild(idCell);
 
-        // 2. Student Profile (Avatar + Name)
+        // 2. Student (Stacked Name + Email)
         const nameCell = document.createElement('td');
         const studentWrapper = document.createElement('div');
         studentWrapper.className = 'student-cell';
-
-        const avatar = document.createElement('div');
-        avatar.className = 'avatar';
-        avatar.textContent = getInitials(student.name);
 
         const infoDiv = document.createElement('div');
         infoDiv.className = 'student-info';
@@ -718,8 +830,12 @@ function renderTable() {
         nameSpan.className = 'student-name-text';
         nameSpan.textContent = student.name;
 
+        const emailSpan = document.createElement('span');
+        emailSpan.className = 'student-email-text';
+        emailSpan.textContent = student.email;
+
         infoDiv.appendChild(nameSpan);
-        studentWrapper.appendChild(avatar);
+        infoDiv.appendChild(emailSpan);
         studentWrapper.appendChild(infoDiv);
         nameCell.appendChild(studentWrapper);
         row.appendChild(nameCell);
@@ -732,7 +848,7 @@ function renderTable() {
         deptCell.appendChild(deptTag);
         row.appendChild(deptCell);
 
-        // 4. GPA
+        // 4. GPA (Tabular font)
         const gpaCell = document.createElement('td');
         const gpaPill = document.createElement('span');
         const parsedGpa = parseGpa(student.gpa);
@@ -742,7 +858,7 @@ function renderTable() {
         gpaCell.appendChild(gpaPill);
         row.appendChild(gpaCell);
 
-        // 5. Academic Status
+        // 5. Academic Status (Official Stamp Badge)
         const statusCell = document.createElement('td');
         const statusBadge = document.createElement('span');
         const statusVal = student.status || 'ACTIVE';
@@ -751,30 +867,42 @@ function renderTable() {
         statusCell.appendChild(statusBadge);
         row.appendChild(statusCell);
 
-        // 6. Contact Info
-        const contactCell = document.createElement('td');
-        const emailDiv = document.createElement('div');
-        emailDiv.style.fontWeight = '500';
-        emailDiv.textContent = student.email;
+        // 6. Phone
+        const phoneCell = document.createElement('td');
+        phoneCell.textContent = student.phone || '—';
+        phoneCell.style.color = 'var(--text-muted)';
+        phoneCell.style.fontSize = '0.8rem';
+        phoneCell.style.fontVariantNumeric = 'tabular-nums';
+        row.appendChild(phoneCell);
 
-        const phoneDiv = document.createElement('div');
-        phoneDiv.style.fontSize = '0.8rem';
-        phoneDiv.style.color = 'var(--text-muted)';
-        phoneDiv.textContent = student.phone;
-
-        contactCell.appendChild(emailDiv);
-        contactCell.appendChild(phoneDiv);
-        row.appendChild(contactCell);
-
-        // 7. Actions (Role-Adaptive)
+        // 7. Actions (Adaptive per Role)
         const actionsCell = document.createElement('td');
         const actionsWrapper = document.createElement('div');
         actionsWrapper.className = 'actions-cell';
 
+        // Transcript Action button
+        const transBtn = document.createElement('button');
+        transBtn.className = 'btn-icon';
+        transBtn.title = 'View Official Academic Transcript';
+        transBtn.setAttribute('aria-label', `Transcript for ${student.name}`);
+        transBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+            </svg>
+        `;
+        transBtn.addEventListener('click', () => {
+            selectedTranscriptStudentId = student.id;
+            if (transcriptStudentSelect) {
+                transcriptStudentSelect.value = student.id;
+            }
+            switchTab('viewTranscript');
+        });
+        actionsWrapper.appendChild(transBtn);
+
         if (canEdit) {
             const editBtn = document.createElement('button');
             editBtn.className = 'btn-icon edit';
-            editBtn.title = 'Edit Student Record';
+            editBtn.title = 'Edit Academic Record';
             editBtn.setAttribute('aria-label', `Edit ${student.name}`);
             editBtn.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -788,7 +916,7 @@ function renderTable() {
         if (canDelete) {
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'btn-icon delete';
-            deleteBtn.title = 'Delete Student Record';
+            deleteBtn.title = 'Delete Academic Record';
             deleteBtn.setAttribute('aria-label', `Delete ${student.name}`);
             deleteBtn.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -797,14 +925,6 @@ function renderTable() {
             `;
             deleteBtn.addEventListener('click', () => openDeleteModal(student));
             actionsWrapper.appendChild(deleteBtn);
-        }
-
-        if (!canEdit && !canDelete) {
-            const viewPill = document.createElement('span');
-            viewPill.style.fontSize = '0.75rem';
-            viewPill.style.color = 'var(--text-subtle)';
-            viewPill.textContent = 'View-Only';
-            actionsWrapper.appendChild(viewPill);
         }
 
         actionsCell.appendChild(actionsWrapper);
@@ -821,37 +941,221 @@ function getInitials(name) {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-// --- CSV Exporter ---
+// --- Gradebook Matrix Subsystem ---
+function renderGradebook() {
+    if (!gradebookTableBody) return;
+    gradebookTableBody.innerHTML = '';
+
+    const courseCode = gradebookCourseSelect ? gradebookCourseSelect.value : 'CS-301';
+    
+    // Choose students enrolled in this course or take a sample
+    const enrolledStudents = students.slice(0, 16);
+
+    enrolledStudents.forEach((student, idx) => {
+        const row = document.createElement('tr');
+        const gpa = parseGpa(student.gpa) || 3.0;
+
+        // Deterministic realistic scores derived from GPA
+        const baseScore = Math.min(98, Math.max(55, Math.round((gpa / 4.0) * 85 + 10 + (idx % 5))));
+        const assignScore = Math.min(100, baseScore + (idx % 4));
+        const midScore = Math.min(100, Math.max(50, baseScore - (idx % 3)));
+        const finalScore = Math.min(100, Math.max(50, baseScore + ((idx % 3) - 1)));
+        const attRate = Math.min(100, Math.max(75, Math.round(88 + (gpa * 2.8))));
+
+        // Weighting: 20% Assign, 30% Mid, 40% Final, 10% Attendance
+        const composite = Math.round((assignScore * 0.20) + (midScore * 0.30) + (finalScore * 0.40) + (attRate * 0.10));
+
+        let letter = 'A';
+        let gradeClass = 'grade-A';
+        if (composite < 60) { letter = 'F'; gradeClass = 'grade-F'; }
+        else if (composite < 70) { letter = 'D'; gradeClass = 'grade-D'; }
+        else if (composite < 80) { letter = 'C'; gradeClass = 'grade-C'; }
+        else if (composite < 90) { letter = 'B'; gradeClass = 'grade-B'; }
+
+        row.innerHTML = `
+            <td><span class="student-id-badge">#${student.id}</span></td>
+            <td>
+                <div class="student-name-text">${student.name}</div>
+                <div class="student-email-text">${student.department}</div>
+            </td>
+            <td style="font-variant-numeric: tabular-nums;">${assignScore}%</td>
+            <td style="font-variant-numeric: tabular-nums;">${midScore}%</td>
+            <td style="font-variant-numeric: tabular-nums;">${finalScore}%</td>
+            <td style="font-variant-numeric: tabular-nums;">${attRate}%</td>
+            <td style="font-variant-numeric: tabular-nums; font-weight: 700;">${composite}%</td>
+            <td><span class="grade-tag ${gradeClass}">${letter}</span></td>
+            <td><span class="attendance-pct ${attRate >= 90 ? 'attendance-high' : attRate >= 80 ? 'attendance-med' : 'attendance-low'}">${attRate}%</span></td>
+        `;
+        gradebookTableBody.appendChild(row);
+    });
+}
+
+// --- Course Catalog Subsystem ---
+function renderCourses() {
+    if (!courseTableBody) return;
+    courseTableBody.innerHTML = '';
+
+    COURSE_CATALOG.forEach(course => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><span class="course-code-badge">${course.code}</span></td>
+            <td>
+                <div style="font-weight: 600; color: var(--text-main); font-size: 0.84rem;">${course.title}</div>
+            </td>
+            <td><span class="dept-tag">${course.department}</span></td>
+            <td style="font-variant-numeric: tabular-nums; font-weight: 600;">${course.credits}</td>
+            <td style="color: var(--text-muted); font-size: 0.82rem;">${course.instructor}</td>
+            <td style="color: var(--text-subtle); font-size: 0.78rem;">${course.schedule} (${course.room})</td>
+            <td><span class="capacity-meter">${course.enrolled} / ${course.capacity}</span></td>
+            <td>
+                <span class="status-badge ${course.status === 'OPEN' ? 'ACTIVE' : 'INACTIVE'}">
+                    ${course.status}
+                </span>
+            </td>
+        `;
+        courseTableBody.appendChild(row);
+    });
+}
+
+// --- Official Academic Transcript Subsystem ---
+function populateTranscriptSelector() {
+    if (!transcriptStudentSelect) return;
+    transcriptStudentSelect.innerHTML = '';
+
+    students.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = `#${s.id} — ${s.name} (${s.department || 'General'})`;
+        if (s.id === selectedTranscriptStudentId) {
+            opt.selected = true;
+        }
+        transcriptStudentSelect.appendChild(opt);
+    });
+}
+
+function renderTranscript(studentId) {
+    const student = students.find(s => s.id === studentId) || students[0];
+    if (!student) return;
+
+    // Header Card fields
+    document.getElementById('transStudentName').textContent = student.name;
+    document.getElementById('transStudentId').textContent = `STU-2024-${String(student.id).padStart(3, '0')}`;
+    document.getElementById('transStudentDept').textContent = student.department || 'Academic Affairs';
+
+    const gpaNum = parseGpa(student.gpa) || 3.50;
+    const standingEl = document.getElementById('transStudentStanding');
+    if (gpaNum >= 3.80) {
+        standingEl.textContent = "DEAN'S HONORS LIST";
+        standingEl.style.color = "var(--success)";
+    } else if (gpaNum >= 3.00) {
+        standingEl.textContent = "GOOD ACADEMIC STANDING";
+        standingEl.style.color = "var(--teal)";
+    } else {
+        standingEl.textContent = "ACADEMIC WARNING";
+        standingEl.style.color = "var(--red-mark)";
+    }
+
+    document.getElementById('transCumulativeGpa').textContent = gpaNum.toFixed(2);
+    document.getElementById('transEarnedCredits').textContent = `${(gpaNum * 16).toFixed(1)} / 120.0 CR`;
+    document.getElementById('transAttendanceRate').textContent = `${(88 + (gpaNum * 2.8)).toFixed(1)}%`;
+
+    // Semester Coursework Ledger
+    const termsContainer = document.getElementById('transcriptTermsContainer');
+    termsContainer.innerHTML = '';
+
+    const semesters = [
+        {
+            name: 'Fall Term 2025 (Third Year)',
+            termGpa: gpaNum.toFixed(2),
+            termCredits: '16.0',
+            courses: [
+                { code: 'CS-301', name: 'Distributed Systems & Cloud Computing', cr: '4.0', gr: gpaNum >= 3.7 ? 'A' : 'B+', pts: '16.0' },
+                { code: 'DS-201', name: 'Applied Machine Learning & Neural Nets', cr: '4.0', gr: gpaNum >= 3.5 ? 'A' : 'B', pts: '15.0' },
+                { code: 'MATH-210', name: 'Discrete Optimization & Linear Algebra', cr: '4.0', gr: 'A', pts: '16.0' },
+                { code: 'IT-401', name: 'Enterprise Cybersecurity Engineering', cr: '4.0', gr: gpaNum >= 3.2 ? 'A-' : 'B', pts: '14.8' }
+            ]
+        },
+        {
+            name: 'Spring Term 2025 (Second Year)',
+            termGpa: (Math.max(2.8, gpaNum - 0.1)).toFixed(2),
+            termCredits: '15.0',
+            courses: [
+                { code: 'CS-101', name: 'Advanced Algorithms & Complexity Theory', cr: '4.0', gr: 'A', pts: '16.0' },
+                { code: 'BA-105', name: 'Corporate Financial Modeling & Analytics', cr: '3.0', gr: 'A-', pts: '11.1' },
+                { code: 'EE-302', name: 'Linear Systems & Circuit Dynamics', cr: '4.0', gr: 'B+', pts: '13.2' },
+                { code: 'ME-204', name: 'Engineering Thermodynamics Laboratory', cr: '4.0', gr: 'A', pts: '16.0' }
+            ]
+        }
+    ];
+
+    semesters.forEach(term => {
+        const termBox = document.createElement('div');
+        termBox.className = 'transcript-term';
+
+        termBox.innerHTML = `
+            <div class="transcript-term-header">
+                <h4>${term.name}</h4>
+                <span class="term-summary-stats">Term Credits: <strong>${term.termCredits}</strong> · Term GPA: <strong>${term.termGpa}</strong></span>
+            </div>
+            <table class="transcript-table">
+                <thead>
+                    <tr>
+                        <th style="width: 100px;">Course Code</th>
+                        <th>Course Description</th>
+                        <th style="width: 80px;">Credits</th>
+                        <th style="width: 80px;">Grade</th>
+                        <th style="width: 90px;">Quality Pts</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${term.courses.map(c => `
+                        <tr>
+                            <td><span class="course-code-badge">${c.code}</span></td>
+                            <td>${c.name}</td>
+                            <td style="font-variant-numeric: tabular-nums;">${c.cr}</td>
+                            <td><span class="grade-tag grade-${c.gr[0]}">${c.gr}</span></td>
+                            <td style="font-variant-numeric: tabular-nums; font-weight: 600;">${c.pts}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+        termsContainer.appendChild(termBox);
+    });
+}
+
+// --- CSV Export Engine ---
 function exportToCsv() {
     if (filteredStudents.length === 0) {
-        showToast('No students to export.', 'info');
+        showToast('No records to export.', 'info');
         return;
     }
 
-    const headers = ['ID', 'Name', 'Email', 'Phone', 'Department', 'GPA', 'Status', 'Enrollment Date'];
+    const headers = ['ID', 'Full Name', 'Email', 'Phone', 'Department', 'GPA', 'Academic Status', 'Enrollment Date'];
     const rows = filteredStudents.map(s => [
         s.id,
         `"${(s.name || '').replace(/"/g, '""')}"`,
         `"${(s.email || '').replace(/"/g, '""')}"`,
         `"${(s.phone || '').replace(/"/g, '""')}"`,
         `"${(s.department || '').replace(/"/g, '""')}"`,
-        s.gpa != null ? s.gpa.toFixed(2) : '',
-        `"${(s.status || '').replace(/"/g, '""')}"`,
+        s.gpa !== null && s.gpa !== undefined ? s.gpa : '',
+        s.status || '',
         s.enrollmentDate || ''
     ]);
 
     const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
+
     const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `studeo_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `studeo_academic_register_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    showToast(`Exported ${filteredStudents.length} records to CSV.`, 'success');
+    showToast(`Exported ${filteredStudents.length} academic records to CSV.`, 'success');
 }
 
 // --- Student Modal Management ---
@@ -936,13 +1240,13 @@ async function handleFormSubmit(e) {
 
         if (response.ok) {
             closeStudentModal();
-            showToast(isEdit ? 'Student record updated!' : 'Student enrolled successfully!', 'success');
+            showToast(isEdit ? 'Student record updated in register!' : 'Student registered successfully!', 'success');
             await loadStudents();
             if (activityDrawerOverlay.classList.contains('active')) {
                 loadActivityFeed();
             }
         } else if (response.status === 403) {
-            showToast('Permission denied: You lack privileges to modify records.', 'error');
+            showToast('Permission denied: You lack privileges to modify academic records.', 'error');
         } else if (response.status === 400) {
             const errData = await response.json();
             if (errData.validationErrors) {
@@ -954,11 +1258,11 @@ async function handleFormSubmit(e) {
             }
         } else {
             const errData = await response.json().catch(() => ({}));
-            showToast(errData.message || 'Failed to save record.', 'error');
+            showToast(errData.message || 'Failed to save academic record.', 'error');
         }
     } catch (err) {
         console.error('Save error:', err);
-        showToast('Network error while saving student.', 'error');
+        showToast('Network error while saving student record.', 'error');
     }
 }
 
@@ -985,7 +1289,7 @@ async function confirmDelete() {
 
         if (response.ok) {
             closeDeleteModal();
-            showToast('Student record deleted.', 'info');
+            showToast('Student record deleted from register.', 'info');
             await loadStudents();
             if (activityDrawerOverlay.classList.contains('active')) {
                 loadActivityFeed();
@@ -997,7 +1301,7 @@ async function confirmDelete() {
         }
     } catch (err) {
         console.error('Delete error:', err);
-        showToast('Network error while deleting student.', 'error');
+        showToast('Network error while deleting record.', 'error');
     }
 }
 
@@ -1008,11 +1312,11 @@ function showToast(message, type = 'info', duration = 3500) {
 
     let iconSvg = '';
     if (type === 'success') {
-        iconSvg = `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>`;
+        iconSvg = `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>`;
     } else if (type === 'error') {
-        iconSvg = `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>`;
+        iconSvg = `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>`;
     } else {
-        iconSvg = `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>`;
+        iconSvg = `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>`;
     }
 
     const iconSpan = document.createElement('span');

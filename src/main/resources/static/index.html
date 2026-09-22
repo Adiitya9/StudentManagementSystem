@@ -6,7 +6,7 @@
     <title>Studeo — Student Analytics & Academic Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <!-- Chart.js for analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -24,12 +24,12 @@
                 </div>
                 <div class="brand-text">
                     <h1>Studeo</h1>
-                    <span>Student Analytics & Academic Portal</span>
+                    <span>Office of Academic Records &amp; University Registrar</span>
                 </div>
             </div>
             <div class="nav-actions">
                 <button class="btn btn-secondary btn-sm" id="openActivityDrawerBtn" title="View Recent Audit Activity">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;color:var(--primary);">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;color:var(--teal);">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
                     Activity Feed
@@ -56,154 +56,330 @@
             </div>
         </header>
 
-        <!-- KPI Metrics Grid -->
-        <section class="metrics-grid" aria-label="Key Performance Metrics">
-            <div class="metric-card">
-                <div class="metric-icon indigo">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-                    </svg>
-                </div>
-                <div class="metric-data">
-                    <div class="metric-title">Total Enrolled</div>
-                    <div class="metric-value" id="metricTotal">0</div>
-                </div>
-            </div>
+        <!-- Academic Navigation Tabs -->
+        <nav class="academic-tabs" aria-label="Academic Records Navigation">
+            <button class="tab-btn active" id="tabRegisterBtn" data-target="viewRegister">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" />
+                </svg>
+                Student Register
+                <span class="tab-badge" id="tabCountStudents">40</span>
+            </button>
+            <button class="tab-btn" id="tabGradebookBtn" data-target="viewGradebook">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" />
+                </svg>
+                Gradebook &amp; Attendance
+            </button>
+            <button class="tab-btn" id="tabCoursesBtn" data-target="viewCourses">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                </svg>
+                Course Catalog
+                <span class="tab-badge" id="tabCountCourses">8</span>
+            </button>
+            <button class="tab-btn" id="tabTranscriptBtn" data-target="viewTranscript">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342" />
+                </svg>
+                Academic Transcript
+            </button>
+        </nav>
 
-            <div class="metric-card">
-                <div class="metric-icon green">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.003 0H9.497m5.003 0a3 3 0 0 0 3-3V7.125c0-.621-.504-1.125-1.125-1.125H7.625C7.004 6 6.5 6.504 6.5 7.125v5.25a3 3 0 0 0 3 3" />
-                    </svg>
+        <!-- ================================================================
+             VIEW 1: Student Register Ledger (Default)
+             ================================================================ -->
+        <div id="viewRegister" class="view-panel">
+            <!-- KPI Metrics Summary Strip -->
+            <section class="metrics-grid" aria-label="Key Performance Metrics">
+                <div class="metric-card">
+                    <div class="metric-data">
+                        <div class="metric-title">Total Enrolled</div>
+                        <div class="metric-value" id="metricTotal">0</div>
+                    </div>
                 </div>
-                <div class="metric-data">
-                    <div class="metric-title">Average GPA</div>
-                    <div class="metric-value" id="metricAvgGpa">0.00</div>
-                </div>
-            </div>
 
-            <div class="metric-card">
-                <div class="metric-icon purple">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814" />
-                    </svg>
+                <div class="metric-card">
+                    <div class="metric-data">
+                        <div class="metric-title">Average GPA</div>
+                        <div class="metric-value" id="metricAvgGpa">0.00</div>
+                    </div>
                 </div>
-                <div class="metric-data">
-                    <div class="metric-title">Top Department</div>
-                    <div class="metric-value" id="metricTopDept" style="font-size: 1.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">—</div>
-                </div>
-            </div>
 
-            <div class="metric-card">
-                <div class="metric-icon amber">
+                <div class="metric-card">
+                    <div class="metric-data">
+                        <div class="metric-title">Top Department</div>
+                        <div class="metric-value" id="metricTopDept" style="font-size: 1.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">—</div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-data">
+                        <div class="metric-title">Search Matches</div>
+                        <div class="metric-value" id="metricMatches">0</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Controls Bar -->
+            <section class="controls-bar">
+                <div class="search-box">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                     </svg>
+                    <input type="text" id="searchInput" placeholder="Search by name, email, department, or phone..." aria-label="Search students">
                 </div>
-                <div class="metric-data">
-                    <div class="metric-title">Search Matches</div>
-                    <div class="metric-value" id="metricMatches">0</div>
+                <div class="controls-actions">
+                    <button class="btn btn-secondary" id="exportCsvBtn" title="Export Current List to CSV">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                        </svg>
+                        Export CSV
+                    </button>
+                    <button class="btn btn-primary" id="openAddModalBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Add Student
+                    </button>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- Interactive Visual Analytics -->
-        <section class="charts-grid" aria-label="Visual Analytics">
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3>Department Breakdown</h3>
-                </div>
-                <div class="chart-container">
-                    <canvas id="deptChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3>Academic Performance (GPA Tiers)</h3>
-                </div>
-                <div class="chart-container">
-                    <canvas id="gpaChart"></canvas>
-                </div>
-            </div>
-        </section>
-
-        <!-- Controls Bar -->
-        <section class="controls-bar">
-            <div class="search-box">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+            <!-- Readonly Student Banner -->
+            <div class="readonly-banner" id="readonlyBanner" style="display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:20px;height:20px;flex-shrink:0;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                 </svg>
-                <input type="text" id="searchInput" placeholder="Search by name, email, department, or phone..." aria-label="Search students">
+                <span><strong>Student Portal:</strong> You are signed in as a student with read-only access. Modification actions are restricted to Faculty and Administrators.</span>
             </div>
-            <div class="controls-actions">
-                <button class="btn btn-secondary" id="exportCsvBtn" title="Export Current List to CSV">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                    </svg>
-                    Export CSV
-                </button>
-                <button class="btn btn-primary" id="openAddModalBtn">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Add Student
-                </button>
-            </div>
-        </section>
 
-        <!-- Readonly Student Banner -->
-        <div class="readonly-banner" id="readonlyBanner" style="display: none;">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:20px;height:20px;flex-shrink:0;">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-            </svg>
-            <span><strong>Student Portal:</strong> You are signed in as a student with read-only access. Modification actions are restricted to Faculty and Administrators.</span>
+            <!-- Student Register Table Card -->
+            <main class="table-card">
+                <div class="table-header">
+                    <h2>Enrolled Students</h2>
+                    <span class="table-count" id="tableCountBadge">Loading...</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table id="studentTable">
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-sort="id" style="width: 75px;">ID <span class="sort-indicator">↕</span></th>
+                                <th class="sortable" data-sort="name">Student <span class="sort-indicator">↕</span></th>
+                                <th class="sortable" data-sort="department">Department <span class="sort-indicator">↕</span></th>
+                                <th class="sortable" data-sort="gpa" style="width: 85px;">GPA <span class="sort-indicator">↕</span></th>
+                                <th class="sortable" data-sort="status" style="width: 110px;">Status <span class="sort-indicator">↕</span></th>
+                                <th style="width: 140px;">Phone</th>
+                                <th style="width: 110px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody">
+                            <!-- Populated safely via app.js -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+                    </svg>
+                    <h3>No student records found</h3>
+                    <p>No matching student records found in the register. Try adjusting your search query or enroll a new student.</p>
+                </div>
+
+                <!-- Table Pagination -->
+                <div class="pagination-bar" id="paginationBar">
+                    <span id="paginationInfo">Showing 1 to 10 of 40 students</span>
+                    <div class="pagination-controls">
+                        <button class="pagination-btn" id="prevPageBtn" disabled>Previous</button>
+                        <span class="pagination-page-indicator" id="pageIndicator">Page 1 of 1</span>
+                        <button class="pagination-btn" id="nextPageBtn" disabled>Next</button>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Interactive Visual Analytics (Secondary) -->
+            <section class="charts-grid" aria-label="Visual Analytics">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Department Breakdown</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="deptChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Academic Performance (GPA Tiers)</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="gpaChart"></canvas>
+                    </div>
+                </div>
+            </section>
         </div>
 
-        <!-- Student Table Card -->
-        <main class="table-card">
-            <div class="table-header">
-                <h2>Enrolled Students</h2>
-                <span class="table-count" id="tableCountBadge">Loading...</span>
-            </div>
+        <!-- ================================================================
+             VIEW 2: Gradebook & Attendance Matrix (Faculty & Admin)
+             ================================================================ -->
+        <div id="viewGradebook" class="view-panel hidden">
+            <div class="table-card">
+                <div class="gradebook-toolbar">
+                    <div class="gradebook-course-selector">
+                        <label for="gradebookCourseSelect">Course Section:</label>
+                        <select id="gradebookCourseSelect" aria-label="Select course section">
+                            <option value="CS-301">CS-301: Distributed Systems (Prof. Vance)</option>
+                            <option value="DS-201">DS-201: Applied Machine Learning (Prof. Nair)</option>
+                            <option value="BA-105">BA-105: Corporate Strategy &amp; Finance (Prof. Miller)</option>
+                            <option value="ME-204">ME-204: Thermodynamics &amp; Fluid Dynamics (Prof. Roy)</option>
+                            <option value="IT-401">IT-401: Enterprise Cybersecurity (Prof. Sharma)</option>
+                        </select>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                        Weighting: <strong>Assignments 20%</strong> · <strong>Midterm 30%</strong> · <strong>Final 40%</strong> · <strong>Attendance 10%</strong>
+                    </div>
+                </div>
 
-            <div class="table-responsive">
-                <table id="studentTable">
-                    <thead>
-                        <tr>
-                            <th class="sortable" data-sort="id" style="width: 80px;">ID <span class="sort-indicator">↕</span></th>
-                            <th class="sortable" data-sort="name">Student <span class="sort-indicator">↕</span></th>
-                            <th class="sortable" data-sort="department">Department <span class="sort-indicator">↕</span></th>
-                            <th class="sortable" data-sort="gpa" style="width: 95px;">GPA <span class="sort-indicator">↕</span></th>
-                            <th class="sortable" data-sort="status" style="width: 120px;">Status <span class="sort-indicator">↕</span></th>
-                            <th>Contact Info</th>
-                            <th style="width: 110px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="studentTableBody">
-                        <!-- Populated safely via app.js -->
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="empty-state" id="emptyState" style="display: none;">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
-                </svg>
-                <h3>No students found</h3>
-                <p>No matching student records were found. Try changing your search query or add a new student.</p>
-            </div>
-
-            <!-- Table Pagination -->
-            <div class="pagination-bar" id="paginationBar">
-                <span id="paginationInfo">Showing 1 to 6 of 6 students</span>
-                <div class="pagination-controls">
-                    <button class="pagination-btn" id="prevPageBtn" disabled>Previous</button>
-                    <span class="pagination-page-indicator" id="pageIndicator">Page 1 of 1</span>
-                    <button class="pagination-btn" id="nextPageBtn" disabled>Next</button>
+                <div class="table-responsive">
+                    <table id="gradebookTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 75px;">ID</th>
+                                <th>Student Name</th>
+                                <th style="width: 120px;">Assignments (20%)</th>
+                                <th style="width: 110px;">Midterm (30%)</th>
+                                <th style="width: 110px;">Final (40%)</th>
+                                <th style="width: 120px;">Attendance (10%)</th>
+                                <th style="width: 95px;">Composite</th>
+                                <th style="width: 80px;">Grade</th>
+                                <th style="width: 110px;">Attendance %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gradebookTableBody">
+                            <!-- Populated dynamically via app.js -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
-        </main>
+        </div>
+
+        <!-- ================================================================
+             VIEW 3: Course Catalog & Curriculum
+             ================================================================ -->
+        <div id="viewCourses" class="view-panel hidden">
+            <div class="table-card">
+                <div class="table-header">
+                    <h2>Academic Course Bulletin &amp; Syllabus</h2>
+                    <span class="table-count" id="courseCountBadge">8 Active Courses</span>
+                </div>
+                <div class="table-responsive">
+                    <table id="coursesTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 100px;">Course Code</th>
+                                <th>Course Title</th>
+                                <th>Department</th>
+                                <th style="width: 75px;">Credits</th>
+                                <th>Instructor</th>
+                                <th>Schedule &amp; Room</th>
+                                <th style="width: 120px;">Enrolled / Cap</th>
+                                <th style="width: 90px;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="courseTableBody">
+                            <!-- Populated dynamically via app.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================
+             VIEW 4: Official Academic Transcript & Student ID Card
+             ================================================================ -->
+        <div id="viewTranscript" class="view-panel hidden">
+            <!-- Student Selector for Faculty/Admin (auto-set for Student) -->
+            <div id="transcriptSelectorBar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; background: var(--surface); padding: 12px 18px; border: 1px solid var(--border); border-radius: var(--radius-md);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label for="transcriptStudentSelect" style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted);">Inspect Student Record:</label>
+                    <select id="transcriptStudentSelect" style="padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-alt); font-size: 0.85rem; color: var(--text-main);">
+                        <!-- Populated dynamically with students -->
+                    </select>
+                </div>
+                <div class="transcript-controls">
+                    <button class="btn btn-secondary btn-sm" onclick="window.print()">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24-1.076-.641-2.072-1.18-2.969M17.28 13.829c.24-1.076.641-2.072 1.18-2.969M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Print Transcript
+                    </button>
+                </div>
+            </div>
+
+            <!-- Official Transcript Document Sheet -->
+            <div class="transcript-sheet" id="transcriptContainer">
+                <div class="transcript-header">
+                    <div class="transcript-authority">
+                        <div class="transcript-seal">STU</div>
+                        <div class="transcript-authority-text">
+                            <h2>Official Academic Transcript</h2>
+                            <p>Studeo Institute of Higher Learning · Office of the University Registrar</p>
+                        </div>
+                    </div>
+                    <div style="text-align: right; font-size: 0.75rem; color: var(--text-muted);">
+                        <div>Date Issued: <strong>September 22, 2026</strong></div>
+                        <div>Document Status: <strong style="color: var(--teal);">VERIFIED &amp; SEALED</strong></div>
+                    </div>
+                </div>
+
+                <!-- Student Identity Card Banner -->
+                <div class="id-card-banner">
+                    <div class="id-card-field">
+                        <span class="id-card-label">Full Legal Name</span>
+                        <span class="id-card-value" id="transStudentName">Priya Patel</span>
+                    </div>
+                    <div class="id-card-field">
+                        <span class="id-card-label">Student ID Number</span>
+                        <span class="id-card-value" id="transStudentId" style="font-family: monospace;">STU-2024-002</span>
+                    </div>
+                    <div class="id-card-field">
+                        <span class="id-card-label">Department / Program</span>
+                        <span class="id-card-value" id="transStudentDept">Data Science</span>
+                    </div>
+                    <div class="id-card-field">
+                        <span class="id-card-label">Academic Standing</span>
+                        <span class="id-card-value" id="transStudentStanding" style="color: var(--teal);">DEAN'S HONORS LIST</span>
+                    </div>
+                </div>
+
+                <!-- Transcript Coursework Ledger -->
+                <div class="transcript-body" id="transcriptTermsContainer">
+                    <!-- Populated dynamically via app.js -->
+                </div>
+
+                <!-- Grand Summary Cumulative Totals -->
+                <div class="transcript-grand-summary">
+                    <div class="grand-stat">
+                        <span class="grand-stat-label">Cumulative GPA</span>
+                        <span class="grand-stat-value" id="transCumulativeGpa" style="color: var(--teal);">3.92</span>
+                    </div>
+                    <div class="grand-stat">
+                        <span class="grand-stat-label">Credits Earned</span>
+                        <span class="grand-stat-value" id="transEarnedCredits">64.0 / 120.0 CR</span>
+                    </div>
+                    <div class="grand-stat">
+                        <span class="grand-stat-label">Attendance Rate</span>
+                        <span class="grand-stat-value" id="transAttendanceRate" style="color: var(--success);">96.5%</span>
+                    </div>
+                    <div class="grand-stat">
+                        <span class="grand-stat-label">Graduation Target</span>
+                        <span class="grand-stat-value" id="transGraduationTarget">May 2028</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- Student Add/Edit Modal -->
@@ -221,19 +397,19 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="nameInput">Full Name</label>
-                        <input type="text" id="nameInput" placeholder="e.g. Jane Doe" required>
+                        <input type="text" id="nameInput" placeholder="e.g. Aarav Sharma" required>
                         <span class="error-msg"></span>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label for="emailInput">Email Address</label>
-                            <input type="email" id="emailInput" placeholder="e.g. jane@example.com" required>
+                            <input type="email" id="emailInput" placeholder="e.g. aarav.sharma@studeo.edu" required>
                             <span class="error-msg"></span>
                         </div>
                         <div class="form-group">
                             <label for="phoneInput">Phone Number</label>
-                            <input type="tel" id="phoneInput" placeholder="e.g. +1 555-0199" required>
+                            <input type="tel" id="phoneInput" placeholder="e.g. +91 98765 43210" required>
                             <span class="error-msg"></span>
                         </div>
                     </div>
@@ -305,7 +481,7 @@
             </div>
             <div class="modal-body">
                 <p style="color: var(--text-muted); font-size: 0.95rem;">
-                    Are you sure you want to delete <strong id="deleteStudentName" style="color: var(--text-main);"></strong>? This will permanently remove their academic record.
+                    Are you sure you want to delete <strong id="deleteStudentName" style="color: var(--text-main);"></strong>? This will permanently remove their academic record from the register.
                 </p>
             </div>
             <div class="modal-footer">
@@ -320,7 +496,7 @@
         <aside class="drawer">
             <div class="drawer-header">
                 <h3>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:20px;height:20px;color:var(--primary);">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:20px;height:20px;color:var(--teal);">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
                     Audit Activity Feed
@@ -343,7 +519,7 @@
     <div class="modal-overlay" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
         <div class="modal-content" style="max-width: 480px;">
             <div class="modal-header">
-                <h3 id="authModalTitle">Switch Account & Role</h3>
+                <h3 id="authModalTitle">Switch Account &amp; Role</h3>
                 <button class="modal-close-btn" id="closeAuthModalBtn" aria-label="Close dialog">
                     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -372,16 +548,16 @@
                             </svg>
                         </div>
                         <div class="demo-role-name">Faculty</div>
-                        <div class="demo-role-desc">Create & Grade</div>
+                        <div class="demo-role-desc">Grade &amp; Attend</div>
                     </div>
                     <div class="demo-role-btn" data-username="student" data-password="student123">
                         <div class="demo-role-icon">
                             <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.001 0 3.75 3.75 0 0 1 7.001 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.001 0 3.75 3.75 0 0 1 7.001 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21c-2.17 0-5.216-.584-7.499-1.632Z" />
                             </svg>
                         </div>
                         <div class="demo-role-name">Student</div>
-                        <div class="demo-role-desc">Read-Only</div>
+                        <div class="demo-role-desc">My Transcript</div>
                     </div>
                 </div>
 
