@@ -43,8 +43,8 @@ public class SecurityDataInitializer implements CommandLineRunner {
             userRepository.save(User.builder()
                     .username("student")
                     .password(passwordEncoder.encode("student123"))
-                    .fullName("Sarah Johnson")
-                    .email("sarah.johnson@example.com")
+                    .fullName("Priya Patel")
+                    .email("priya.patel@example.com")
                     .role(Role.ROLE_STUDENT)
                     .build());
         }
@@ -55,7 +55,7 @@ public class SecurityDataInitializer implements CommandLineRunner {
 
             auditLogRepository.save(AuditLog.builder()
                     .action("STUDENT_ENROLLED")
-                    .description("Jessica Chen enrolled in Information Technology (GPA: 3.95)")
+                    .description("Aarav Sharma enrolled in Computer Science (GPA: 3.88)")
                     .performedBy("admin")
                     .userRole("ROLE_ADMIN")
                     .timestamp(now.minusHours(3))
@@ -63,7 +63,7 @@ public class SecurityDataInitializer implements CommandLineRunner {
 
             auditLogRepository.save(AuditLog.builder()
                     .action("STUDENT_UPDATED")
-                    .description("Sarah Johnson profile updated — GPA updated to 3.92")
+                    .description("Priya Patel profile updated — GPA updated to 3.92")
                     .performedBy("faculty")
                     .userRole("ROLE_FACULTY")
                     .timestamp(now.minusMinutes(45))
@@ -71,7 +71,7 @@ public class SecurityDataInitializer implements CommandLineRunner {
 
             auditLogRepository.save(AuditLog.builder()
                     .action("STUDENT_UPDATED")
-                    .description("Michael Brown profile updated — Status changed to PROBATION")
+                    .description("Vikram Malhotra profile updated — Status changed to PROBATION")
                     .performedBy("admin")
                     .userRole("ROLE_ADMIN")
                     .timestamp(now.minusMinutes(12))
