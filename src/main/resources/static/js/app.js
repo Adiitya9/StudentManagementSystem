@@ -238,8 +238,15 @@ function updateMetrics() {
 
     if (students.length > 0) {
         // Average GPA
-        const totalGpa = students.reduce((sum, s) => sum + (s.gpa || 0), 0);
-        metricAvgGpa.textContent = (totalGpa / students.length).toFixed(2);
+        const validGpas = students
+            .map(s => parseGpa(s.gpa))
+            .filter(g => g !== null);
+        if (validGpas.length > 0) {
+            const totalGpa = validGpas.reduce((sum, g) => sum + g, 0);
+            metricAvgGpa.textContent = (totalGpa / validGpas.length).toFixed(2);
+        } else {
+            metricAvgGpa.textContent = '0.00';
+        }
 
         // Top Department
         const deptCounts = {};
@@ -318,7 +325,8 @@ function updateCharts() {
     };
 
     students.forEach(s => {
-        const gpa = s.gpa || 0;
+        const gpa = parseGpa(s.gpa);
+        if (gpa === null) return;
         if (gpa >= 3.75) gpaBrackets['3.75 - 4.00']++;
         else if (gpa >= 3.50) gpaBrackets['3.50 - 3.74']++;
         else if (gpa >= 3.00) gpaBrackets['3.00 - 3.49']++;
@@ -435,8 +443,9 @@ function renderTable() {
         // 4. GPA
         const gpaCell = document.createElement('td');
         const gpaPill = document.createElement('span');
-        const gpaVal = typeof student.gpa === 'number' ? student.gpa.toFixed(2) : '—';
-        gpaPill.className = `gpa-pill ${getGpaClass(student.gpa)}`;
+        const parsedGpa = parseGpa(student.gpa);
+        const gpaVal = parsedGpa !== null ? parsedGpa.toFixed(2) : '—';
+        gpaPill.className = `gpa-pill ${getGpaClass(parsedGpa)}`;
         gpaPill.textContent = gpaVal;
         gpaCell.appendChild(gpaPill);
         row.appendChild(gpaCell);
@@ -508,10 +517,17 @@ function getInitials(name) {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+function parseGpa(val) {
+    if (val === null || val === undefined || val === '') return null;
+    const num = Number(val);
+    return isNaN(num) ? null : num;
+}
+
 function getGpaClass(gpa) {
-    if (typeof gpa !== 'number') return '';
-    if (gpa >= 3.5) return 'gpa-high';
-    if (gpa >= 3.0) return 'gpa-med';
+    const num = parseGpa(gpa);
+    if (num === null) return '';
+    if (num >= 3.5) return 'gpa-high';
+    if (num >= 3.0) return 'gpa-med';
     return 'gpa-low';
 }
 
