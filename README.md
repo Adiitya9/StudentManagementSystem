@@ -30,7 +30,7 @@ src/main/
 
 ## Prerequisites
 
-- **Java 17+** (Spring Boot 3.x requirement)
+- **Java 25+** (latest LTS runtime; Spring Boot 3.x requirement)
 - **Maven 3.6+**
 
 ## Running the Application
@@ -129,7 +129,7 @@ Each student has the following fields:
 - **Database**: H2 (In-memory)
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
 - **Build Tool**: Maven
-- **Language**: Java 17
+- **Language**: Java 25
 
 ## Stopping the Application
 
@@ -144,7 +144,7 @@ Press `Ctrl + C` in your terminal to stop the server.
   ```
 
 **Build fails?**
-- Ensure Java 17+ is installed: `java -version`
+- Ensure Java 25+ is installed: `java -version`
 - Clear Maven cache: `mvn clean`
 
 **Database issues?**

@@ -1,6 +1,0 @@
-com/example/sms/StudentManagementSystemApplication.class
-com/example/sms/model/Student.class
-com/example/sms/service/StudentService.class
-com/example/sms/controller/StudentController.class
-com/example/sms/repository/StudentRepository.class
-com/example/sms/controller/HomeController.class
