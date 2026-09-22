@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Studeo — Student Analytics & Academic Portal</title>
+    <title>Studeon — Student Management &amp; Academic Records</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <!-- Chart.js for analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -18,21 +18,21 @@
         <header class="navbar">
             <div class="brand">
                 <div class="brand-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-5.25 6.557c0 1.25.75 2 2 2h6.5c1.25 0 2-.75 2-2v-3.675a55.378 55.378 0 0 0-5.25 2.882" />
                     </svg>
                 </div>
                 <div class="brand-text">
-                    <h1>Studeo</h1>
-                    <span>Office of Academic Records &amp; University Registrar</span>
+                    <h1>Studeon</h1>
+                    <span>Student Management &amp; Academic Records</span>
                 </div>
             </div>
             <div class="nav-actions">
                 <button class="btn btn-secondary btn-sm" id="openActivityDrawerBtn" title="View Recent Audit Activity">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;color:var(--teal);">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
-                    Activity Feed
+                    Activity Log
                 </button>
 
                 <div class="user-profile-pill" id="userProfileBtn" title="Switch Account / Roles">
@@ -59,29 +59,17 @@
         <!-- Academic Navigation Tabs -->
         <nav class="academic-tabs" aria-label="Academic Records Navigation">
             <button class="tab-btn active" id="tabRegisterBtn" data-target="viewRegister">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" />
-                </svg>
                 Student Register
                 <span class="tab-badge" id="tabCountStudents">40</span>
             </button>
             <button class="tab-btn" id="tabGradebookBtn" data-target="viewGradebook">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" />
-                </svg>
                 Gradebook &amp; Attendance
             </button>
             <button class="tab-btn" id="tabCoursesBtn" data-target="viewCourses">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
-                </svg>
-                Course Catalog
+                Course Offerings
                 <span class="tab-badge" id="tabCountCourses">8</span>
             </button>
             <button class="tab-btn" id="tabTranscriptBtn" data-target="viewTranscript">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342" />
-                </svg>
                 Academic Transcript
             </button>
         </nav>
@@ -90,32 +78,32 @@
              VIEW 1: Student Register Ledger (Default)
              ================================================================ -->
         <div id="viewRegister" class="view-panel">
-            <!-- KPI Metrics Summary Strip -->
+            <!-- KPI Metrics Summary Strip (Minimal Typography, No Cards) -->
             <section class="metrics-grid" aria-label="Key Performance Metrics">
                 <div class="metric-card">
                     <div class="metric-data">
-                        <div class="metric-title">Total Enrolled</div>
+                        <div class="metric-title">Enrolled Students</div>
                         <div class="metric-value" id="metricTotal">0</div>
                     </div>
                 </div>
 
                 <div class="metric-card">
                     <div class="metric-data">
-                        <div class="metric-title">Average GPA</div>
+                        <div class="metric-title">Average Cumulative GPA</div>
                         <div class="metric-value" id="metricAvgGpa">0.00</div>
                     </div>
                 </div>
 
                 <div class="metric-card">
                     <div class="metric-data">
-                        <div class="metric-title">Top Department</div>
-                        <div class="metric-value" id="metricTopDept" style="font-size: 1.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">—</div>
+                        <div class="metric-title">Lead Department</div>
+                        <div class="metric-value" id="metricTopDept" style="font-size: 1.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">—</div>
                     </div>
                 </div>
 
                 <div class="metric-card">
                     <div class="metric-data">
-                        <div class="metric-title">Search Matches</div>
+                        <div class="metric-title">Filtered Records</div>
                         <div class="metric-value" id="metricMatches">0</div>
                     </div>
                 </div>
@@ -127,36 +115,33 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                     </svg>
-                    <input type="text" id="searchInput" placeholder="Search by name, email, department, or phone..." aria-label="Search students">
+                    <input type="text" id="searchInput" placeholder="Search by name, email, department, phone, or ID..." aria-label="Search students">
                 </div>
                 <div class="controls-actions">
                     <button class="btn btn-secondary" id="exportCsvBtn" title="Export Current List to CSV">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                        </svg>
                         Export CSV
                     </button>
                     <button class="btn btn-primary" id="openAddModalBtn">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>
-                        Add Student
+                        Enroll Student
                     </button>
                 </div>
             </section>
 
             <!-- Readonly Student Banner -->
             <div class="readonly-banner" id="readonlyBanner" style="display: none;">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:20px;height:20px;flex-shrink:0;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:18px;height:18px;flex-shrink:0;">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                 </svg>
-                <span><strong>Student Portal:</strong> You are signed in as a student with read-only access. Modification actions are restricted to Faculty and Administrators.</span>
+                <span><strong>Student Portal:</strong> Signed in with read-only record access. Modification is restricted to Faculty and Administrators.</span>
             </div>
 
             <!-- Student Register Table Card -->
             <main class="table-card">
                 <div class="table-header">
-                    <h2>Enrolled Students</h2>
+                    <h2>Academic Register</h2>
                     <span class="table-count" id="tableCountBadge">Loading...</span>
                 </div>
 
@@ -164,12 +149,12 @@
                     <table id="studentTable">
                         <thead>
                             <tr>
-                                <th class="sortable" data-sort="id" style="width: 75px;">ID <span class="sort-indicator">↕</span></th>
+                                <th class="sortable" data-sort="id" style="width: 70px;">ID <span class="sort-indicator">↕</span></th>
                                 <th class="sortable" data-sort="name">Student <span class="sort-indicator">↕</span></th>
                                 <th class="sortable" data-sort="department">Department <span class="sort-indicator">↕</span></th>
                                 <th class="sortable" data-sort="gpa" style="width: 85px;">GPA <span class="sort-indicator">↕</span></th>
                                 <th class="sortable" data-sort="status" style="width: 110px;">Status <span class="sort-indicator">↕</span></th>
-                                <th style="width: 140px;">Phone</th>
+                                <th style="width: 140px;">Contact</th>
                                 <th style="width: 110px;">Actions</th>
                             </tr>
                         </thead>
@@ -179,12 +164,9 @@
                     </table>
                 </div>
 
-                <div class="empty-state" id="emptyState" style="display: none;">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
-                    </svg>
-                    <h3>No student records found</h3>
-                    <p>No matching student records found in the register. Try adjusting your search query or enroll a new student.</p>
+                <div class="empty-state" id="emptyState" style="display: none; padding: 48px 20px; text-align: center;">
+                    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 4px;">No student records found</h3>
+                    <p style="font-size: 0.82rem; color: var(--text-muted);">No records match your filter criteria. Adjust your search or enroll a new student.</p>
                 </div>
 
                 <!-- Table Pagination -->
@@ -198,7 +180,7 @@
                 </div>
             </main>
 
-            <!-- Interactive Visual Analytics (Secondary) -->
+            <!-- Visual Analytics (Secondary Distribution) -->
             <section class="charts-grid" aria-label="Visual Analytics">
                 <div class="chart-card">
                     <div class="chart-header">
@@ -211,7 +193,7 @@
 
                 <div class="chart-card">
                     <div class="chart-header">
-                        <h3>Academic Performance (GPA Tiers)</h3>
+                        <h3>Academic Performance Distribution</h3>
                     </div>
                     <div class="chart-container">
                         <canvas id="gpaChart"></canvas>
@@ -229,14 +211,14 @@
                     <div class="gradebook-course-selector">
                         <label for="gradebookCourseSelect">Course Section:</label>
                         <select id="gradebookCourseSelect" aria-label="Select course section">
-                            <option value="CS-301">CS-301: Distributed Systems (Prof. Vance)</option>
+                            <option value="CS-301">CS-301: Distributed Systems (Dr. Vance)</option>
                             <option value="DS-201">DS-201: Applied Machine Learning (Prof. Nair)</option>
-                            <option value="BA-105">BA-105: Corporate Strategy &amp; Finance (Prof. Miller)</option>
+                            <option value="BA-105">BA-105: Corporate Strategy &amp; Governance (Prof. Miller)</option>
                             <option value="ME-204">ME-204: Thermodynamics &amp; Fluid Dynamics (Prof. Roy)</option>
                             <option value="IT-401">IT-401: Enterprise Cybersecurity (Prof. Sharma)</option>
                         </select>
                     </div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                    <div style="font-size: 0.76rem; color: var(--text-muted);">
                         Weighting: <strong>Assignments 20%</strong> · <strong>Midterm 30%</strong> · <strong>Final 40%</strong> · <strong>Attendance 10%</strong>
                     </div>
                 </div>
@@ -245,14 +227,14 @@
                     <table id="gradebookTable">
                         <thead>
                             <tr>
-                                <th style="width: 75px;">ID</th>
+                                <th style="width: 70px;">ID</th>
                                 <th>Student Name</th>
                                 <th style="width: 120px;">Assignments (20%)</th>
                                 <th style="width: 110px;">Midterm (30%)</th>
                                 <th style="width: 110px;">Final (40%)</th>
-                                <th style="width: 120px;">Attendance (10%)</th>
-                                <th style="width: 95px;">Composite</th>
-                                <th style="width: 80px;">Grade</th>
+                                <th style="width: 110px;">Attendance (10%)</th>
+                                <th style="width: 90px;">Total</th>
+                                <th style="width: 75px;">Grade</th>
                                 <th style="width: 110px;">Attendance %</th>
                             </tr>
                         </thead>
@@ -265,26 +247,26 @@
         </div>
 
         <!-- ================================================================
-             VIEW 3: Course Catalog & Curriculum
+             VIEW 3: Course Offerings
              ================================================================ -->
         <div id="viewCourses" class="view-panel hidden">
             <div class="table-card">
                 <div class="table-header">
-                    <h2>Academic Course Bulletin &amp; Syllabus</h2>
+                    <h2>Course Catalog &amp; Offerings</h2>
                     <span class="table-count" id="courseCountBadge">8 Active Courses</span>
                 </div>
                 <div class="table-responsive">
                     <table id="coursesTable">
                         <thead>
                             <tr>
-                                <th style="width: 100px;">Course Code</th>
+                                <th style="width: 95px;">Code</th>
                                 <th>Course Title</th>
                                 <th>Department</th>
-                                <th style="width: 75px;">Credits</th>
+                                <th style="width: 70px;">Credits</th>
                                 <th>Instructor</th>
-                                <th>Schedule &amp; Room</th>
-                                <th style="width: 120px;">Enrolled / Cap</th>
-                                <th style="width: 90px;">Status</th>
+                                <th>Schedule &amp; Hall</th>
+                                <th style="width: 120px;">Enrollment</th>
+                                <th style="width: 80px;">Status</th>
                             </tr>
                         </thead>
                         <tbody id="courseTableBody">
@@ -296,23 +278,19 @@
         </div>
 
         <!-- ================================================================
-             VIEW 4: Official Academic Transcript & Student ID Card
+             VIEW 4: Official Academic Transcript
              ================================================================ -->
         <div id="viewTranscript" class="view-panel hidden">
-            <!-- Student Selector for Faculty/Admin (auto-set for Student) -->
-            <div id="transcriptSelectorBar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; background: var(--surface); padding: 12px 18px; border: 1px solid var(--border); border-radius: var(--radius-md);">
+            <div id="transcriptSelectorBar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--surface); padding: 10px 16px; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <label for="transcriptStudentSelect" style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted);">Inspect Student Record:</label>
-                    <select id="transcriptStudentSelect" style="padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-alt); font-size: 0.85rem; color: var(--text-main);">
-                        <!-- Populated dynamically with students -->
+                    <label for="transcriptStudentSelect" style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.03em;">Inspect Student Record:</label>
+                    <select id="transcriptStudentSelect" style="padding: 5px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); font-size: 0.82rem; color: var(--text-main); outline: none;">
+                        <!-- Populated dynamically -->
                     </select>
                 </div>
                 <div class="transcript-controls">
                     <button class="btn btn-secondary btn-sm" onclick="window.print()">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24-1.076-.641-2.072-1.18-2.969M17.28 13.829c.24-1.076.641-2.072 1.18-2.969M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                        Print Transcript
+                        Print Record
                     </button>
                 </div>
             </div>
@@ -321,15 +299,15 @@
             <div class="transcript-sheet" id="transcriptContainer">
                 <div class="transcript-header">
                     <div class="transcript-authority">
-                        <div class="transcript-seal">STU</div>
+                        <div class="transcript-seal">STD</div>
                         <div class="transcript-authority-text">
-                            <h2>Official Academic Transcript</h2>
-                            <p>Studeo Institute of Higher Learning · Office of the University Registrar</p>
+                            <h2>Academic Transcript &amp; Standing</h2>
+                            <p>Studeon Records Division · Office of the University Registrar</p>
                         </div>
                     </div>
-                    <div style="text-align: right; font-size: 0.75rem; color: var(--text-muted);">
+                    <div style="text-align: right; font-size: 0.72rem; color: var(--text-muted);">
                         <div>Date Issued: <strong>September 22, 2026</strong></div>
-                        <div>Document Status: <strong style="color: var(--teal);">VERIFIED &amp; SEALED</strong></div>
+                        <div>Official Seal: <strong style="color: var(--cobalt);">VERIFIED</strong></div>
                     </div>
                 </div>
 
@@ -340,16 +318,16 @@
                         <span class="id-card-value" id="transStudentName">Priya Patel</span>
                     </div>
                     <div class="id-card-field">
-                        <span class="id-card-label">Student ID Number</span>
+                        <span class="id-card-label">Student ID</span>
                         <span class="id-card-value" id="transStudentId" style="font-family: monospace;">STU-2024-002</span>
                     </div>
                     <div class="id-card-field">
-                        <span class="id-card-label">Department / Program</span>
+                        <span class="id-card-label">Major / Department</span>
                         <span class="id-card-value" id="transStudentDept">Data Science</span>
                     </div>
                     <div class="id-card-field">
-                        <span class="id-card-label">Academic Standing</span>
-                        <span class="id-card-value" id="transStudentStanding" style="color: var(--teal);">DEAN'S HONORS LIST</span>
+                        <span class="id-card-label">Standing</span>
+                        <span class="id-card-value" id="transStudentStanding" style="color: var(--cobalt);">DEAN'S HONORS LIST</span>
                     </div>
                 </div>
 
@@ -362,18 +340,18 @@
                 <div class="transcript-grand-summary">
                     <div class="grand-stat">
                         <span class="grand-stat-label">Cumulative GPA</span>
-                        <span class="grand-stat-value" id="transCumulativeGpa" style="color: var(--teal);">3.92</span>
+                        <span class="grand-stat-value" id="transCumulativeGpa" style="color: var(--cobalt);">3.92</span>
                     </div>
                     <div class="grand-stat">
-                        <span class="grand-stat-label">Credits Earned</span>
+                        <span class="grand-stat-label">Earned Credits</span>
                         <span class="grand-stat-value" id="transEarnedCredits">64.0 / 120.0 CR</span>
                     </div>
                     <div class="grand-stat">
                         <span class="grand-stat-label">Attendance Rate</span>
-                        <span class="grand-stat-value" id="transAttendanceRate" style="color: var(--success);">96.5%</span>
+                        <span class="grand-stat-value" id="transAttendanceRate" style="color: var(--cobalt);">96.5%</span>
                     </div>
                     <div class="grand-stat">
-                        <span class="grand-stat-label">Graduation Target</span>
+                        <span class="grand-stat-label">Expected Graduation</span>
                         <span class="grand-stat-value" id="transGraduationTarget">May 2028</span>
                     </div>
                 </div>
@@ -386,9 +364,9 @@
     <div class="modal-overlay" id="studentModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modalTitle">Add New Student</h3>
+                <h3 id="modalTitle">Enroll Student Record</h3>
                 <button class="modal-close-btn" id="closeModalBtn" aria-label="Close dialog">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                     </svg>
                 </button>
@@ -404,7 +382,7 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="emailInput">Email Address</label>
-                            <input type="email" id="emailInput" placeholder="e.g. aarav.sharma@studeo.edu" required>
+                            <input type="email" id="emailInput" placeholder="e.g. aarav.sharma@studeon.edu" required>
                             <span class="error-msg"></span>
                         </div>
                         <div class="form-group">
@@ -461,7 +439,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" id="cancelFormBtn">Cancel</button>
                     <button type="submit" class="btn btn-primary" id="saveStudentBtn">
-                        <span id="submitBtnText">Add Student</span>
+                        <span id="submitBtnText">Enroll Student</span>
                     </button>
                 </div>
             </form>
@@ -474,14 +452,14 @@
             <div class="modal-header">
                 <h3 id="deleteTitle">Confirm Deletion</h3>
                 <button class="modal-close-btn" id="closeDeleteModalBtn" aria-label="Close dialog">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
             <div class="modal-body">
-                <p style="color: var(--text-muted); font-size: 0.95rem;">
-                    Are you sure you want to delete <strong id="deleteStudentName" style="color: var(--text-main);"></strong>? This will permanently remove their academic record from the register.
+                <p style="color: var(--text-muted); font-size: 0.88rem; line-height: 1.5;">
+                    Are you sure you want to permanently purge <strong id="deleteStudentName" style="color: var(--text-main);"></strong> from the academic register? This action cannot be undone.
                 </p>
             </div>
             <div class="modal-footer">
@@ -496,13 +474,13 @@
         <aside class="drawer">
             <div class="drawer-header">
                 <h3>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:20px;height:20px;color:var(--teal);">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:18px;height:18px;color:var(--cobalt);">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
                     Audit Activity Feed
                 </h3>
                 <button class="modal-close-btn" id="closeActivityDrawerBtn" aria-label="Close activity feed">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                     </svg>
                 </button>
@@ -517,47 +495,47 @@
 
     <!-- Auth & Switch Account Modal -->
     <div class="modal-overlay" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
-        <div class="modal-content" style="max-width: 480px;">
+        <div class="modal-content" style="max-width: 440px;">
             <div class="modal-header">
                 <h3 id="authModalTitle">Switch Account &amp; Role</h3>
                 <button class="modal-close-btn" id="closeAuthModalBtn" aria-label="Close dialog">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
             <div class="modal-body">
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
-                    Select an enterprise demo role or sign in with custom credentials:
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+                    Select an enterprise demo role or sign in:
                 </p>
                 
                 <div class="demo-roles-grid">
                     <div class="demo-role-btn" data-username="admin" data-password="admin123">
                         <div class="demo-role-icon">
-                            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
                             </svg>
                         </div>
                         <div class="demo-role-name">Admin</div>
-                        <div class="demo-role-desc">Full CRUD</div>
+                        <div class="demo-role-desc">Full Control</div>
                     </div>
                     <div class="demo-role-btn" data-username="faculty" data-password="faculty123">
                         <div class="demo-role-icon">
-                            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342" />
                             </svg>
                         </div>
                         <div class="demo-role-name">Faculty</div>
-                        <div class="demo-role-desc">Grade &amp; Attend</div>
+                        <div class="demo-role-desc">Grading</div>
                     </div>
                     <div class="demo-role-btn" data-username="student" data-password="student123">
                         <div class="demo-role-icon">
-                            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.001 0 3.75 3.75 0 0 1 7.001 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21c-2.17 0-5.216-.584-7.499-1.632Z" />
                             </svg>
                         </div>
                         <div class="demo-role-name">Student</div>
-                        <div class="demo-role-desc">My Transcript</div>
+                        <div class="demo-role-desc">Transcript</div>
                     </div>
                 </div>
 
@@ -574,7 +552,7 @@
                         <label for="loginPassword">Password</label>
                         <input type="password" id="loginPassword" placeholder="••••••••" required>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 6px;">
                         Sign In
                     </button>
                 </form>

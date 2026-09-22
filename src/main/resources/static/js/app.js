@@ -672,13 +672,13 @@ function updateMetrics() {
     }
 }
 
-// --- Interactive Charts (Chart.js) with Institutional Colors ---
+// --- Interactive Charts (Chart.js) with Raw Palette ---
 function updateCharts() {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const textColor = isDark ? '#94a3b8' : '#6b7280';
-    const gridColor = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.05)';
+    const textColor = isDark ? '#8A8A8A' : '#767676';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
 
-    // 1. Department Breakdown (Muted Registrar Palette)
+    // 1. Department Breakdown (Electric Cobalt Lead + Carbon Neutrals + Vermilion)
     const deptCounts = {};
     students.forEach(s => {
         const d = s.department || 'Other';
@@ -688,8 +688,8 @@ function updateCharts() {
     const deptLabels = Object.keys(deptCounts);
     const deptData = Object.values(deptCounts);
     const deptColors = [
-        '#0d7377', '#1e293b', '#d97706', '#0284c7',
-        '#7e22ce', '#4d7c0f', '#c2410c', '#64748b'
+        '#0038FF', '#111111', '#333333', '#555555',
+        '#767676', '#999999', '#B8B8B8', '#FF3B20'
     ];
 
     const ctxDept = document.getElementById('deptChart');
@@ -704,7 +704,7 @@ function updateCharts() {
                 data: deptData.length ? deptData : [1],
                 backgroundColor: deptColors.slice(0, deptLabels.length || 1),
                 borderWidth: 2,
-                borderColor: isDark ? '#1a2332' : '#ffffff'
+                borderColor: isDark ? '#121316' : '#ffffff'
             }]
         },
         options: {
@@ -713,13 +713,13 @@ function updateCharts() {
             plugins: {
                 legend: {
                     position: 'right',
-                    labels: { color: textColor, font: { family: 'Inter', size: 11 }, boxWidth: 12 }
+                    labels: { color: textColor, font: { family: 'Inter', size: 11 }, boxWidth: 10 }
                 }
             }
         }
     });
 
-    // 2. GPA Tiers Bar Chart
+    // 2. GPA Tiers Bar Chart (Electric Cobalt Top Tier + Vermilion Support Tier)
     const gpaBrackets = {
         '3.75 - 4.00': 0,
         '3.50 - 3.74': 0,
@@ -749,8 +749,8 @@ function updateCharts() {
             datasets: [{
                 label: 'Enrolled Records',
                 data: Object.values(gpaBrackets),
-                backgroundColor: ['#15803d', '#0d7377', '#0284c7', '#d97706', '#b91c1c'],
-                borderRadius: 4
+                backgroundColor: ['#0038FF', '#111111', '#555555', '#888888', '#FF3B20'],
+                borderRadius: 2
             }]
         },
         options: {
