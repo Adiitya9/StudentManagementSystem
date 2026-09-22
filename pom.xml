@@ -14,8 +14,8 @@
     <groupId>com.example</groupId>
     <artifactId>StudentManagementSystem</artifactId>
     <version>1.0.0</version>
-    <name>Student Management System</name>
-    <description>Minimal Full Stack Student Management System</description>
+    <name>Studeo</name>
+    <description>Studeo — Modern Academic Analytics and Student Management System</description>
 
     <properties>
         <java.version>21</java.version>

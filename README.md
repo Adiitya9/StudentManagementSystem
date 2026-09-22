@@ -1,6 +1,6 @@
-# Student Management System — Production-Ready Web Application
+# Studeo — Academic Analytics & Student Directory
 
-A modern, production-grade Student Management System built with **Spring Boot 3.2.0 (Java 21)**, **Hibernate / Spring Data JPA**, and a sleek **SaaS Dashboard UI** with zero external frontend runtime dependencies.
+A modern, production-grade academic management system and directory built with **Spring Boot 3.2.0 (Java 21)**, **Hibernate / Spring Data JPA**, and a sleek **SaaS Dashboard UI** with interactive analytics (Chart.js), dark theme, and zero frontend runtime bloat.
 
 ---
 
