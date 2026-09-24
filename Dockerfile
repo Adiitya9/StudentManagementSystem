@@ -19,13 +19,10 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser:appgroup
 
 # Copy compiled jar
-COPY --from=builder /workspace/target/StudentManagementSystem-1.0.0.jar app.jar
+COPY --from=builder /workspace/target/*.jar app.jar
 
-# Expose HTTP port
+# Expose HTTP port (default 8080, overridden by Render's PORT environment variable)
 EXPOSE 8080
 
-# Configure healthcheck using Spring Actuator
-HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1
-
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
+# Production memory tuning for cloud containers (Render 512MB RAM safety)
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
