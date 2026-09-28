@@ -1,6 +1,6 @@
 # Studeon — Student Management & Academic Records Portal
 
-Studeon is a production-grade academic records and student management system built with Spring Boot 3.2.0, Java 21, Spring Security with JWT-based role-based access control (RBAC), and a responsive client interface styled with Plus Jakarta Sans and an anchored Royal Cobalt aesthetic.
+Studeon is a production-grade academic records and student management system built with Spring Boot 3.5.16, Java 25, Spring Security with JWT-based role-based access control (RBAC), and a responsive client interface styled with Plus Jakarta Sans and an anchored Royal Cobalt aesthetic.
 
 ---
 
@@ -119,8 +119,8 @@ The application initializes with predefined demo accounts:
 
 | Layer | Technology |
 |---|---|
-| Backend Framework | Spring Boot 3.2.0 |
-| Runtime Environment | Java 21 (Eclipse Temurin) |
+| Backend Framework | Spring Boot 3.5.16 |
+| Runtime Environment | Java 25 (Eclipse Temurin) |
 | Security & Auth | Spring Security 6, JJWT 0.11.5 (HMAC-SHA512) |
 | Persistence | Spring Data JPA, Hibernate 6 |
 | Database | H2 Embedded Database (In-Memory) |
@@ -134,7 +134,7 @@ The application initializes with predefined demo accounts:
 ## Getting Started
 
 ### Prerequisites
-- Java Development Kit (JDK) 21 or higher
+- Java Development Kit (JDK) 25 or higher
 - Apache Maven 3.8+
 - (Optional) Docker Engine and Docker Compose
 
