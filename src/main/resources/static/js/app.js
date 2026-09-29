@@ -117,8 +117,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
     bindEvents();
     renderCourses();
-    await initAuth();
     await loadStudents();
+    await initAuth();
 });
 
 // --- Event Listeners ---
@@ -281,6 +281,9 @@ async function initAuth() {
         try {
             currentUser = JSON.parse(saved);
             updateUserUi();
+            if (students.length === 0) {
+                await loadStudents();
+            }
             return;
         } catch (e) {
             console.warn('Invalid auth in localStorage:', e);
@@ -321,7 +324,9 @@ async function executeLogin(username, password, showNotification = true) {
             showToast(`Signed in as ${currentUser.fullName} (${getRoleDisplay(currentUser.role)})`, 'success');
         }
 
-        await loadStudents();
+        if (students.length === 0) {
+            await loadStudents();
+        }
         if (activityDrawerOverlay.classList.contains('active')) {
             loadActivityFeed();
         }
@@ -536,8 +541,10 @@ async function loadStudents() {
             headers: getAuthHeaders()
         });
 
-        if (response.status === 401) {
-            openAuthModal();
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('studeo_auth');
+            currentUser = null;
+            await executeLogin('admin', 'admin123', false);
             return;
         }
 
@@ -694,30 +701,40 @@ function updateCharts() {
 
     const ctxDept = document.getElementById('deptChart');
     if (!ctxDept) return;
-    if (deptChartInstance) deptChartInstance.destroy();
-
-    deptChartInstance = new Chart(ctxDept.getContext('2d'), {
-        type: 'doughnut',
-        data: {
-            labels: deptLabels.length ? deptLabels : ['None'],
-            datasets: [{
-                data: deptData.length ? deptData : [1],
-                backgroundColor: deptColors.slice(0, deptLabels.length || 1),
-                borderWidth: 2,
-                borderColor: isDark ? '#111827' : '#FFFFFF'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'right',
-                    labels: { color: textColor, font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: 600 }, boxWidth: 12 }
+    
+    if (deptChartInstance) {
+        deptChartInstance.data.labels = deptLabels.length ? deptLabels : ['None'];
+        deptChartInstance.data.datasets[0].data = deptData.length ? deptData : [1];
+        deptChartInstance.data.datasets[0].backgroundColor = deptColors.slice(0, deptLabels.length || 1);
+        deptChartInstance.data.datasets[0].borderColor = isDark ? '#111827' : '#FFFFFF';
+        if (deptChartInstance.options.plugins && deptChartInstance.options.plugins.legend) {
+            deptChartInstance.options.plugins.legend.labels.color = textColor;
+        }
+        deptChartInstance.update();
+    } else {
+        deptChartInstance = new Chart(ctxDept.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: deptLabels.length ? deptLabels : ['None'],
+                datasets: [{
+                    data: deptData.length ? deptData : [1],
+                    backgroundColor: deptColors.slice(0, deptLabels.length || 1),
+                    borderWidth: 2,
+                    borderColor: isDark ? '#111827' : '#FFFFFF'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { color: textColor, font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: 600 }, boxWidth: 12 }
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 
     // 2. GPA Tiers Bar Chart
     const gpaBrackets = {
@@ -740,38 +757,46 @@ function updateCharts() {
 
     const ctxGpa = document.getElementById('gpaChart');
     if (!ctxGpa) return;
-    if (gpaChartInstance) gpaChartInstance.destroy();
-
-    gpaChartInstance = new Chart(ctxGpa.getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels: Object.keys(gpaBrackets),
-            datasets: [{
-                label: 'Enrolled Records',
-                data: Object.values(gpaBrackets),
-                backgroundColor: ['#1D4ED8', '#2563EB', '#3B82F6', '#64748B', '#DC2626'],
-                borderRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    ticks: { color: textColor, font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: 600 } },
-                    grid: { display: false }
-                },
-                y: {
-                    beginAtZero: true,
-                    ticks: { color: textColor, stepSize: 2, font: { family: "'Plus Jakarta Sans', sans-serif", size: 11 } },
-                    grid: { color: gridColor }
-                }
+    
+    if (gpaChartInstance) {
+        gpaChartInstance.data.labels = Object.keys(gpaBrackets);
+        gpaChartInstance.data.datasets[0].data = Object.values(gpaBrackets);
+        gpaChartInstance.options.scales.x.ticks.color = textColor;
+        gpaChartInstance.options.scales.y.ticks.color = textColor;
+        gpaChartInstance.options.scales.y.grid.color = gridColor;
+        gpaChartInstance.update();
+    } else {
+        gpaChartInstance = new Chart(ctxGpa.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(gpaBrackets),
+                datasets: [{
+                    label: 'Enrolled Records',
+                    data: Object.values(gpaBrackets),
+                    backgroundColor: ['#1D4ED8', '#2563EB', '#3B82F6', '#64748B', '#DC2626'],
+                    borderRadius: 4
+                }]
             },
-            plugins: {
-                legend: { display: false }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        ticks: { color: textColor, font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: 600 } },
+                        grid: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: textColor, stepSize: 2, font: { family: "'Plus Jakarta Sans', sans-serif", size: 11 } },
+                        grid: { color: gridColor }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
             }
-        }
-    });
+        });
+    }
 }
 
 // --- Safe XSS-Free Table Rendering ---

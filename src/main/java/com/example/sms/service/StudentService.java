@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +24,7 @@ public class StudentService {
         return studentRepository.findAll()
                 .stream()
                 .map(StudentResponse::fromEntity)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -95,7 +94,7 @@ public class StudentService {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id));
 
-        studentRepository.deleteById(id);
+        studentRepository.delete(student);
 
         auditLogService.log("STUDENT_DELETED",
                 "Student record #" + id + " (" + student.getName() + ", " + student.getDepartment() + ") was deleted");

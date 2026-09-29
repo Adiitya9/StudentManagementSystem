@@ -1,5 +1,5 @@
 # Stage 1: Build application with Maven
-FROM maven:3.9-eclipse-temurin-25-alpine AS builder
+FROM maven:3.9-eclipse-temurin-21-alpine AS builder
 WORKDIR /workspace
 
 # Cache dependencies
@@ -11,7 +11,7 @@ COPY src src
 RUN mvn clean package -DskipTests -B
 
 # Stage 2: Minimal, secure JRE runtime
-FROM eclipse-temurin:25-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 # Run as non-root user for security

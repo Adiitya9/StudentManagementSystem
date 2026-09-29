@@ -3,6 +3,7 @@ package com.example.sms.security;
 import com.example.sms.model.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,12 +18,14 @@ public class JwtTokenProvider {
 
     private final SecretKey secretKey;
     private final long validityInMilliseconds;
+    private final JwtParser jwtParser;
 
     public JwtTokenProvider(
             @Value("${app.jwt.secret:studeo-enterprise-academic-system-secret-key-2026-very-secure-256bit}") String secret,
             @Value("${app.jwt.expiration-ms:86400000}") long validityInMilliseconds) { // 24 hours
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.validityInMilliseconds = validityInMilliseconds;
+        this.jwtParser = Jwts.parser().verifyWith(secretKey).clockSkewSeconds(60).build();
     }
 
     public String generateToken(String username, Role role, String fullName) {
@@ -41,10 +44,7 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parser()
-                    .verifyWith(secretKey)
-                    .build()
-                    .parseSignedClaims(token);
+            jwtParser.parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             return false;
@@ -64,9 +64,7 @@ public class JwtTokenProvider {
     }
 
     private Claims getClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
+        return jwtParser
                 .parseSignedClaims(token)
                 .getPayload();
     }

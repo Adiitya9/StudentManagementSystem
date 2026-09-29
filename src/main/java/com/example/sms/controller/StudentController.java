@@ -13,7 +13,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/students")
-@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class StudentController {
 
@@ -32,7 +31,9 @@ public class StudentController {
     @PostMapping
     public ResponseEntity<StudentResponse> createStudent(@Valid @RequestBody StudentRequest studentRequest) {
         StudentResponse created = studentService.createStudent(studentRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        java.net.URI location = org.springframework.web.servlet.support.ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}").buildAndExpand(created.getId()).toUri();
+        return ResponseEntity.created(location).body(created);
     }
 
     @PutMapping("/{id}")

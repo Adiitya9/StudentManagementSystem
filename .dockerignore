@@ -1,0 +1,36 @@
+# Version control
+.git
+.gitignore
+
+# IDE files
+.idea
+.vscode
+*.iml
+*.iws
+*.ipr
+.settings
+.project
+.classpath
+.factorypath
+
+# Build output (rebuilt inside container)
+target/
+
+# OS files
+.DS_Store
+*.swp
+*.log
+Thumbs.db
+
+# Documentation (not needed in image)
+README.md
+LICENSE
+
+# Docker configs (not needed inside image)
+docker-compose.yml
+render.yaml
+Dockerfile
+.dockerignore
+
+# GitHub workflows
+.github/

@@ -198,11 +198,11 @@ class StudentServiceTest {
     void deleteStudent_whenExists_shouldDelete() {
         Student s = Student.builder().id(1L).name("Alice").department("Computer Science").build();
         when(studentRepository.findById(1L)).thenReturn(Optional.of(s));
-        doNothing().when(studentRepository).deleteById(1L);
+        doNothing().when(studentRepository).delete(s);
 
         studentService.deleteStudent(1L);
 
-        verify(studentRepository, times(1)).deleteById(1L);
+        verify(studentRepository, times(1)).delete(s);
         verify(auditLogService, times(1)).log(eq("STUDENT_DELETED"), anyString());
     }
 
@@ -211,6 +211,6 @@ class StudentServiceTest {
         when(studentRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> studentService.deleteStudent(99L));
-        verify(studentRepository, never()).deleteById(anyLong());
+        verify(studentRepository, never()).delete(any());
     }
 }

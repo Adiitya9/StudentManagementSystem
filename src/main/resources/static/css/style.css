@@ -47,6 +47,11 @@
     --purple-light: #F5F3FF;
     --purple-border: #DDD6FE;
 
+    /* Missing referenced variables */
+    --cobalt: #1D4ED8;
+    --teal: #0D9488;
+    --red-mark: #DC2626;
+
     /* Radii: elegant, intentional */
     --radius-sm: 4px;
     --radius-md: 6px;
@@ -101,6 +106,10 @@
     --purple: #A855F7;
     --purple-light: rgba(168, 85, 247, 0.12);
     --purple-border: #581C87;
+
+    --cobalt: #3B82F6;
+    --teal: #14B8A6;
+    --red-mark: #EF4444;
 
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.4);
@@ -1575,5 +1584,76 @@ tbody tr:hover {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
+    }
+}
+
+/* ==========================================================================
+   Print Styles — Clean academic transcript output
+   ========================================================================== */
+
+@media print {
+    body {
+        background: #FFFFFF;
+        color: #000000;
+        font-size: 12pt;
+    }
+
+    .navbar,
+    .academic-tabs,
+    .controls-bar,
+    .pagination-bar,
+    .charts-grid,
+    .toast-container,
+    .modal-overlay,
+    .drawer-overlay,
+    .theme-toggle-btn,
+    .readonly-banner,
+    #transcriptSelectorBar .transcript-controls,
+    .btn {
+        display: none !important;
+    }
+
+    .app-container {
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+
+    .view-panel {
+        display: block !important;
+    }
+
+    .view-panel.hidden {
+        display: none !important;
+    }
+
+    .transcript-sheet {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+    }
+
+    .table-card {
+        border: none;
+        box-shadow: none;
+    }
+
+    table {
+        border-collapse: collapse;
+    }
+
+    th, td {
+        border: 1px solid #CBD5E1;
+        padding: 6px 8px;
+    }
+
+    a {
+        color: #000000;
+        text-decoration: none;
+    }
+
+    * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 }

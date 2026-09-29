@@ -32,7 +32,8 @@ class JwtTokenProviderTest {
 
     @Test
     void validateTokenShouldRejectExpiredToken() {
-        JwtTokenProvider provider = new JwtTokenProvider(SECRET, 0);
+        // Use a negative expiration to create a token that is already well past the 60s clock skew tolerance
+        JwtTokenProvider provider = new JwtTokenProvider(SECRET, -120_000);
         String token = provider.generateToken("student-user", Role.ROLE_STUDENT, "Student User");
 
         assertFalse(provider.validateToken(token));
